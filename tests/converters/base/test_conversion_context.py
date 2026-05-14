@@ -126,6 +126,23 @@ class TestStreamContextBufferMethods:
         assert ctx.pending_usage is not None
         assert ctx.pending_usage["prompt_tokens"] == 10
 
+    def test_buffer_usage_merges_different_keys(self):
+        """Two buffer_usage calls with different keys merge correctly."""
+        ctx = StreamContext()
+        ctx.buffer_usage({"prompt_tokens": 25, "completion_tokens": 0})
+        ctx.buffer_usage({"completion_tokens": 42})
+        assert ctx.pending_usage is not None
+        assert ctx.pending_usage["prompt_tokens"] == 25
+        assert ctx.pending_usage["completion_tokens"] == 42
+
+    def test_buffer_usage_accumulates_same_key(self):
+        """Two buffer_usage calls with the same numeric key add up."""
+        ctx = StreamContext()
+        ctx.buffer_usage({"prompt_tokens": 10})
+        ctx.buffer_usage({"prompt_tokens": 5})
+        assert ctx.pending_usage is not None
+        assert ctx.pending_usage["prompt_tokens"] == 15
+
     def test_pop_pending_usage_returns_and_clears(self):
         ctx = StreamContext()
         ctx.buffer_usage({"prompt_tokens": 10})

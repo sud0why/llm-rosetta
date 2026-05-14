@@ -390,6 +390,22 @@ class TestAnthropicConverter:
         )
         assert result["id"] == "msg_pydantic"
 
+    def test_response_from_provider_missing_usage(self):
+        """Test response without usage field still produces zero-filled usage."""
+        provider_response = {
+            "id": "msg_no_usage",
+            "type": "message",
+            "role": "assistant",
+            "model": "claude-3-5-sonnet-20241022",
+            "content": [{"type": "text", "text": "Hello"}],
+            "stop_reason": "end_turn",
+        }
+        result = self.converter.response_from_provider(provider_response)
+        assert "usage" in result
+        assert result["usage"]["prompt_tokens"] == 0
+        assert result["usage"]["completion_tokens"] == 0
+        assert result["usage"]["total_tokens"] == 0
+
     # ==================== response_to_provider ====================
 
     def test_response_to_provider_basic(self):
@@ -498,6 +514,32 @@ class TestAnthropicConverter:
             )
             result = self.converter.response_to_provider(ir_response)
             assert result["stop_reason"] == anthropic_reason, f"Failed for {ir_reason}"
+
+    def test_response_to_provider_missing_usage(self):
+        """Test response to provider without usage field still includes zero-filled usage."""
+        ir_response = cast(
+            IRResponse,
+            {
+                "id": "resp_no_usage",
+                "object": "response",
+                "created": 1700000000,
+                "model": "claude-3-5-sonnet-20241022",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": [{"type": "text", "text": "Hello!"}],
+                        },
+                        "finish_reason": {"reason": "stop"},
+                    }
+                ],
+            },
+        )
+        result = self.converter.response_to_provider(ir_response)
+        assert "usage" in result
+        assert result["usage"]["input_tokens"] == 0
+        assert result["usage"]["output_tokens"] == 0
 
     # ==================== messages_to_provider / messages_from_provider ====================
 

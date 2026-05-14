@@ -261,8 +261,21 @@ class StreamContext(ConversionContext):
     # Buffer convenience methods
 
     def buffer_usage(self, usage: Mapping[str, Any]) -> None:
-        """Store usage info for later merging into a terminal event."""
-        self.pending_usage = dict(usage)
+        """Accumulate usage info for later merging into a terminal event.
+
+        If no usage is buffered yet, stores a copy. Otherwise merges
+        by adding numeric values and overwriting non-numeric ones, so
+        that partial updates (e.g., input tokens first, output tokens
+        later) are correctly combined.
+        """
+        if self.pending_usage is None:
+            self.pending_usage = dict(usage)
+        else:
+            for key, value in usage.items():
+                if isinstance(value, (int, float)):
+                    self.pending_usage[key] = self.pending_usage.get(key, 0) + value
+                else:
+                    self.pending_usage[key] = value
 
     def pop_pending_usage(self) -> dict[str, Any] | None:
         """Return and clear buffered pending usage, if any."""

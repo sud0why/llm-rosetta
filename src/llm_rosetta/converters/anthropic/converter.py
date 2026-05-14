@@ -288,10 +288,9 @@ class AnthropicConverter(BaseConverter):
             "choices": [choice_info],
         }
 
-        # Usage
-        p_usage = provider_response.get("usage")
-        if p_usage:
-            ir_response["usage"] = self._build_ir_usage(p_usage)
+        # Usage (always present — downstream clients may crash without it)
+        p_usage = provider_response.get("usage") or {}
+        ir_response["usage"] = self._build_ir_usage(p_usage)
 
         # Preserve mode: capture extra fields for lossless round-trip
         ctx = context if context is not None else ConversionContext()
@@ -356,10 +355,9 @@ class AnthropicConverter(BaseConverter):
             if "stop_sequence" in finish_reason:
                 provider_response["stop_sequence"] = finish_reason["stop_sequence"]
 
-        # Usage
-        ir_usage = ir_response.get("usage")
-        if ir_usage:
-            provider_response["usage"] = self._build_provider_usage(ir_usage)  # ty: ignore[invalid-argument-type]
+        # Usage (always present — Anthropic responses require usage field)
+        ir_usage = ir_response.get("usage") or {}
+        provider_response["usage"] = self._build_provider_usage(ir_usage)  # ty: ignore[invalid-argument-type]
 
         # Preserve mode: inject captured extra fields
         ctx = context if context is not None else ConversionContext()
@@ -795,10 +793,14 @@ class AnthropicConverter(BaseConverter):
         self, event: StreamStartEvent, context: StreamContext | None
     ) -> dict[str, Any]:
         """Handle StreamStartEvent → message_start."""
+        input_tokens = 0
         if context is not None:
             context.response_id = event["response_id"]
             context.model = event["model"]
             context.mark_started()
+            # Use real input_tokens from buffered usage if available
+            if context.pending_usage is not None:
+                input_tokens = context.pending_usage.get("prompt_tokens") or 0
         return {
             "type": AnthropicEventType.MESSAGE_START,
             "message": {
@@ -808,7 +810,7 @@ class AnthropicConverter(BaseConverter):
                 "model": event["model"],
                 "content": [],
                 "stop_reason": None,
-                "usage": {"input_tokens": 0, "output_tokens": 0},
+                "usage": {"input_tokens": input_tokens, "output_tokens": 0},
             },
         }
 

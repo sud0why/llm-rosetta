@@ -992,6 +992,25 @@ class TestStreamResponseToProviderWithContext:
         assert ctx.model == "claude-sonnet-4-20250514"
         assert ctx.is_started is True
 
+    def test_stream_start_uses_buffered_input_tokens(self):
+        """StreamStartEvent uses real input_tokens from buffered usage."""
+        ctx = StreamContext()
+        ctx.buffer_usage({"prompt_tokens": 42, "completion_tokens": 0})
+        event = cast(
+            StreamStartEvent,
+            {
+                "type": "stream_start",
+                "response_id": "msg_buf",
+                "model": "claude-sonnet-4-20250514",
+            },
+        )
+        result = cast(
+            dict[str, Any],
+            self.converter.stream_response_to_provider(event, context=ctx),
+        )
+        assert result["message"]["usage"]["input_tokens"] == 42
+        assert result["message"]["usage"]["output_tokens"] == 0
+
     def test_stream_start_without_context(self):
         """StreamStartEvent works without context."""
         event = cast(

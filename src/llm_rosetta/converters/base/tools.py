@@ -61,6 +61,29 @@ UNSUPPORTED_SCHEMA_KEYS: set[str] = {
 _DEFS_KEYS: set[str] = {"$defs", "definitions"}
 
 
+def _deep_merge_schema(base: dict[str, Any], overlay: dict[str, Any]) -> None:
+    """Merge overlay into base, deep-merging 'properties' dicts.
+
+    Regular keys are overwritten by overlay values. The 'properties' key
+    is special-cased: if both base and overlay contain a 'properties' dict,
+    they are merged (overlay wins on conflict) instead of replaced.
+
+    Args:
+        base: Target dict to merge into (mutated in place).
+        overlay: Source dict whose entries are merged into base.
+    """
+    for key, value in overlay.items():
+        if (
+            key == "properties"
+            and key in base
+            and isinstance(base[key], dict)
+            and isinstance(value, dict)
+        ):
+            base[key] = {**base[key], **value}
+        else:
+            base[key] = value
+
+
 def _flatten_combination(schema: dict[str, Any]) -> dict[str, Any]:
     """Flatten ``anyOf``/``oneOf`` nullable patterns into a simple typed schema.
 
@@ -95,10 +118,10 @@ def _flatten_combination(schema: dict[str, Any]) -> dict[str, Any]:
 
         if len(non_null) == 1:
             # Common nullable pattern: merge the single real type
-            base.update(non_null[0])
+            _deep_merge_schema(base, non_null[0])
         elif len(non_null) > 1:
             # Multiple non-null types: pick the first (lossy but avoids rejection)
-            base.update(non_null[0])
+            _deep_merge_schema(base, non_null[0])
         # else: all variants are null → just mark nullable
 
         if has_null:
@@ -110,7 +133,7 @@ def _flatten_combination(schema: dict[str, Any]) -> dict[str, Any]:
     all_of = schema.get("allOf")
     if isinstance(all_of, list) and len(all_of) == 1 and isinstance(all_of[0], dict):
         base = {k: v for k, v in schema.items() if k != "allOf"}
-        base.update(all_of[0])
+        _deep_merge_schema(base, all_of[0])
         return base
 
     return schema
@@ -178,7 +201,7 @@ def sanitize_schema(
             # Siblings of $ref (e.g. description) are kept; $ref itself is
             # replaced by the resolved definition's content.
             merged = {k: v for k, v in schema.items() if k != "$ref"}
-            merged.update(resolved)
+            _deep_merge_schema(merged, resolved)
             return sanitize_schema(merged, defs, extra_strip_keys)
 
     result: dict[str, Any] = {}
@@ -203,6 +226,16 @@ def sanitize_schema(
     # Flatten combination keywords (anyOf/oneOf/allOf) into simple types.
     if result.keys() & {"anyOf", "oneOf", "allOf"}:
         result = _flatten_combination(result)
+
+    # Strip orphaned required entries that reference non-existent properties.
+    if "required" in result and "properties" in result:
+        props = result["properties"]
+        if isinstance(props, dict) and isinstance(result["required"], list):
+            valid = [r for r in result["required"] if r in props]
+            if valid:
+                result["required"] = valid
+            else:
+                del result["required"]
 
     return result
 

@@ -106,11 +106,15 @@ build-docker:
 		LOCAL_WHEEL=$$(ls dist/*$(V)*.whl | head -n 1 | xargs basename); \
 		echo "Found local wheel: $$LOCAL_WHEEL"; \
 		BUILD_ARGS="$$BUILD_ARGS --build-arg LOCAL_WHEEL=$$LOCAL_WHEEL"; \
-	elif [ -n "$(V)" ]; then \
-		echo "Using version: $(V)"; \
+	elif echo "$(V)" | grep -qE '^[0-9]+\.[0-9]+'; then \
+		echo "Using version from PyPI: $(V)"; \
 		BUILD_ARGS="$$BUILD_ARGS --build-arg PACKAGE_VERSION=$(V)"; \
+	elif [ -d "dist" ] && [ -n "$$(ls -A dist/*.whl 2>/dev/null)" ]; then \
+		LOCAL_WHEEL=$$(ls dist/*.whl | head -n 1 | xargs basename); \
+		echo "Non-version tag '$(V)', using local wheel: $$LOCAL_WHEEL"; \
+		BUILD_ARGS="$$BUILD_ARGS --build-arg LOCAL_WHEEL=$$LOCAL_WHEEL"; \
 	else \
-		echo "No local wheel or version specified, will install latest from PyPI"; \
+		echo "No local wheel found, will install latest from PyPI"; \
 	fi; \
 	if [ -n "$(PYPI_MIRROR)" ]; then \
 		echo "Using PyPI mirror: $(PYPI_MIRROR)"; \
@@ -160,13 +164,16 @@ help:
 	@echo "  all            - Run lint, test, and build (default)"
 	@echo ""
 	@echo "Usage examples:"
-	@echo "  make build-docker"
-	@echo "  make build-docker V=0.5.0"
+	@echo "  make build-docker                  # build from local wheel or PyPI, tag=VERSION"
+	@echo "  make build-docker V=0.5.0          # install 0.5.0 from PyPI, tag=0.5.0"
+	@echo "  make build-docker V=dev-test       # use local wheel in dist/, tag=dev-test"
 	@echo "  make build-docker PYPI_MIRROR=https://pypi.tuna.tsinghua.edu.cn/simple"
 	@echo "  make build-docker REGISTRY_MIRROR=docker.1ms.run"
 	@echo ""
 	@echo "Variables:"
-	@echo "  V=<version>              - Specify version (default: auto-detected from __init__.py)"
+	@echo "  V=<version|tag>          - Docker image tag (default: auto-detected from __init__.py)"
+	@echo "                             Semver values also set the PyPI install version"
+	@echo "                             Non-semver values (e.g. dev-test) use local wheel in dist/"
 	@echo "  PYPI_MIRROR=<url>        - PyPI mirror URL"
 	@echo "  REGISTRY_MIRROR=<host>   - Docker registry mirror"
 	@echo ""

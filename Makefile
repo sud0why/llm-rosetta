@@ -139,7 +139,8 @@ clean-docker:
 # ──────────────────────────────────────────────
 
 SSH_TARGET ?=
-COMPOSE_SERVICE ?= llm-rosetta-gateway-devtest
+DEVTEST_STACK ?= /dockervol/dockge/stacks/llm-rosetta-devtest
+DEVTEST_CONTAINER ?= llm-rosetta-devtest-llm-rosetta-gateway-devtest-1
 
 deploy-dev:
 ifndef SSH_TARGET
@@ -158,11 +159,11 @@ endif
 	echo "==> Deploying to $(SSH_TARGET) via zstd..."; \
 	docker save $(DOCKER_IMAGE):dev-test | zstd -3 | ssh $(SSH_TARGET) \
 		'zstd -d | docker load && \
-		 cd /dockervol/dockge/stacks/llm-rosetta && \
-		 docker compose up -d --force-recreate $(COMPOSE_SERVICE) && \
+		 cd $(DEVTEST_STACK) && \
+		 docker compose up -d --force-recreate && \
 		 sleep 3 && \
 		 curl -sS http://127.0.0.1:54982/health && echo && \
-		 docker exec llm-rosetta-$(COMPOSE_SERVICE)-1 python -c "import llm_rosetta; print(llm_rosetta.__version__)"'; \
+		 docker exec $(DEVTEST_CONTAINER) python -c "import llm_rosetta; print(llm_rosetta.__version__)"'; \
 	echo "==> Dev-test deployed successfully."
 
 # Help target
@@ -210,6 +211,9 @@ help:
 	@echo ""
 	@echo "Deployment:"
 	@echo "  deploy-dev     - Build dev image and deploy to remote dev-test gateway"
+	@echo ""
+	@echo "  SSH_TARGET=<host>        - SSH target for deploy-dev (required)"
+	@echo "  DEVTEST_STACK=<path>     - Remote compose stack path (default: /dockervol/dockge/stacks/llm-rosetta-devtest)"
 	@echo ""
 	@echo "Usage examples:"
 	@echo "  make deploy-dev SSH_TARGET=cloud.usa2"

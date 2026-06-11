@@ -2,6 +2,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/llm-rosetta?color=green)](https://pypi.org/project/llm-rosetta/)
 [![GitHub release](https://img.shields.io/github/v/release/Oaklight/llm-rosetta?color=green)](https://github.com/Oaklight/llm-rosetta/releases/latest)
+[![Docker](https://img.shields.io/docker/v/oaklight/llm-rosetta-gateway?label=Docker&color=blue)](https://hub.docker.com/r/oaklight/llm-rosetta-gateway)
 [![CI](https://github.com/Oaklight/llm-rosetta/actions/workflows/ci.yml/badge.svg)](https://github.com/Oaklight/llm-rosetta/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![arXiv](https://img.shields.io/badge/arXiv-2604.09360-b31b1b.svg)](https://arxiv.org/abs/2604.09360)

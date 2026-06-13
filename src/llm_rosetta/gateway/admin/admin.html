@@ -676,13 +676,19 @@ body { padding-bottom: 26px; }
       <input id="modelUpstream" placeholder="e.g. claudeopus45 (leave blank if same as model name)">
     </div>
     <div class="form-group">
+      <label data-i18n="label.modelType">Model Type</label>
+      <div class="fetch-type-radios">
+        <label><input type="radio" name="modelType" value="llm" checked onchange="onModelTypeChange()"> <span data-i18n="label.llm">LLM</span></label>
+        <label><input type="radio" name="modelType" value="embedding" onchange="onModelTypeChange()"> <span data-i18n="label.embedding">Embedding</span></label>
+      </div>
+    </div>
+    <div class="form-group" id="modelCapsGroup">
       <label data-i18n="label.capabilities">Capabilities</label>
       <div class="checkbox-group">
-        <label><input type="checkbox" id="capText" checked onchange="onCapChange()"> text</label>
-        <label><input type="checkbox" id="capVision" checked onchange="onCapChange()"> vision</label>
-        <label><input type="checkbox" id="capTools" checked onchange="onCapChange()"> tools</label>
-        <label><input type="checkbox" id="capEmbedding" onchange="onCapChange()"> embedding</label>
-        <label><input type="checkbox" id="capReasoning" onchange="onCapChange()"> reasoning</label>
+        <label><input type="checkbox" id="capText" checked> text</label>
+        <label><input type="checkbox" id="capVision"> vision</label>
+        <label><input type="checkbox" id="capTools" checked> tools</label>
+        <label><input type="checkbox" id="capReasoning"> reasoning</label>
       </div>
     </div>
     <div class="modal-actions">
@@ -1383,39 +1389,21 @@ function openModelModal(model, provider, capabilities, upstreamModel) {
       sel.appendChild(opt);
     }
   }
-  // Set capability checkboxes (default all enabled for new models)
-  const caps = capabilities || ['text', 'vision', 'tools'];
+  // Set model type and capability checkboxes
+  const caps = capabilities || ['text', 'tools'];
+  const isEmbedding = caps.includes('embedding') && !caps.includes('text');
+  document.querySelector('input[name="modelType"][value="' + (isEmbedding ? 'embedding' : 'llm') + '"]').checked = true;
   document.getElementById('capText').checked = caps.includes('text');
   document.getElementById('capVision').checked = caps.includes('vision');
   document.getElementById('capTools').checked = caps.includes('tools');
-  document.getElementById('capEmbedding').checked = caps.includes('embedding');
   document.getElementById('capReasoning').checked = caps.includes('reasoning');
-  onCapChange();
+  onModelTypeChange();
   document.getElementById('modelModal').classList.add('open');
 }
 
-function onCapChange() {
-  const txt = document.getElementById('capText');
-  const emb = document.getElementById('capEmbedding');
-  const vis = document.getElementById('capVision');
-  const tools = document.getElementById('capTools');
-  const reas = document.getElementById('capReasoning');
-  if (emb.checked) {
-    txt.checked = false; txt.disabled = true;
-    vis.checked = false; vis.disabled = true;
-    tools.checked = false; tools.disabled = true;
-    reas.checked = false; reas.disabled = true;
-  } else {
-    txt.disabled = false;
-    vis.disabled = false;
-    tools.disabled = false;
-    reas.disabled = false;
-  }
-  if (txt.checked || vis.checked || tools.checked || reas.checked) {
-    emb.disabled = true;
-  } else {
-    emb.disabled = false;
-  }
+function onModelTypeChange() {
+  const isLLM = document.querySelector('input[name="modelType"]:checked').value === 'llm';
+  document.getElementById('modelCapsGroup').style.display = isLLM ? '' : 'none';
 }
 
 // ===================== Config Tab =====================
@@ -1746,12 +1734,18 @@ async function saveModel() {
   const name = document.getElementById('modelName').value.trim();
   const provider = document.getElementById('modelProvider').value;
   if (!name || !provider) { showToast(t('error.modelRequired'), 'error'); return; }
-  const capabilities = [];
-  if (document.getElementById('capText').checked) capabilities.push('text');
-  if (document.getElementById('capVision').checked) capabilities.push('vision');
-  if (document.getElementById('capTools').checked) capabilities.push('tools');
-  if (document.getElementById('capEmbedding').checked) capabilities.push('embedding');
-  if (document.getElementById('capReasoning').checked) capabilities.push('reasoning');
+  const modelType = document.querySelector('input[name="modelType"]:checked').value;
+  let capabilities;
+  if (modelType === 'embedding') {
+    capabilities = ['embedding'];
+  } else {
+    capabilities = [];
+    if (document.getElementById('capText').checked) capabilities.push('text');
+    if (document.getElementById('capVision').checked) capabilities.push('vision');
+    if (document.getElementById('capTools').checked) capabilities.push('tools');
+    if (document.getElementById('capReasoning').checked) capabilities.push('reasoning');
+    if (capabilities.length === 0) capabilities.push('text');
+  }
   const body = {provider, capabilities};
   const upstreamModel = document.getElementById('modelUpstream').value.trim();
   if (upstreamModel) body.upstream_model = upstreamModel;

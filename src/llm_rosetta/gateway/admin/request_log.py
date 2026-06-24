@@ -21,6 +21,11 @@ request_detail_var: contextvars.ContextVar[dict[str, Any] | None] = (
     contextvars.ContextVar("request_detail", default=None)
 )
 
+# Deferred log fields for streaming requests (logged after the stream ends).
+pending_stream_log_var: contextvars.ContextVar[dict[str, Any] | None] = (
+    contextvars.ContextVar("pending_stream_log", default=None)
+)
+
 
 @dataclass(frozen=True)
 class RequestLogEntry:
@@ -123,6 +128,49 @@ class RequestLogEntry:
         if self.upstream_response_headers is not None:
             d["upstream_response_headers"] = self.upstream_response_headers
         return d
+
+
+def finalize_stream_request_log() -> None:
+    """Flush a deferred streaming request log entry, if one is pending."""
+    pending = pending_stream_log_var.get()
+    if pending is None:
+        return
+    request_log = pending.get("request_log")
+    if request_log is None:
+        pending_stream_log_var.set(None)
+        return
+
+    detail = request_detail_var.get()
+    request_log.add(
+        RequestLogEntry.create(
+            model=pending["model"],
+            source_provider=pending["source_provider"],
+            target_provider=pending["target_provider"],
+            target_provider_name=pending.get("target_provider_name"),
+            is_stream=True,
+            status_code=pending["status_code"],
+            duration_ms=pending["duration_ms"],
+            error_detail=pending.get("error_detail"),
+            api_key_label=pending.get("api_key_label"),
+            client_ip=pending.get("client_ip"),
+            request_body=detail.get("request_body") if detail else None,
+            request_headers=detail.get("request_headers") if detail else None,
+            upstream_request_body=detail.get("upstream_request_body")
+            if detail
+            else None,
+            upstream_response_body=detail.get("upstream_response_body")
+            if detail
+            else None,
+            upstream_request_headers=detail.get("upstream_request_headers")
+            if detail
+            else None,
+            upstream_response_headers=detail.get("upstream_response_headers")
+            if detail
+            else None,
+        )
+    )
+    pending_stream_log_var.set(None)
+    request_detail_var.set(None)
 
 
 class RequestLog:

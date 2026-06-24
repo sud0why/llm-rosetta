@@ -43,7 +43,7 @@ from .logging import (
     log_upstream_error,
 )
 from .providers import ProviderInfo
-from .admin.request_log import request_detail_var
+from .admin.request_log import finalize_stream_request_log, request_detail_var
 
 logger = get_logger()
 
@@ -815,88 +815,70 @@ async def _stream_event_generator(
     chunk_count = 0
     t0 = time.monotonic()
 
-    client = get_client(provider_info.proxy_url)
-    upstream_resp = await client.post(
-        url, json=upstream_body, headers=headers, stream=True
-    )
-    assert isinstance(upstream_resp, HttpStreamingResponse)
+    try:
+        client = get_client(provider_info.proxy_url)
+        upstream_resp = await client.post(
+            url, json=upstream_body, headers=headers, stream=True
+        )
+        assert isinstance(upstream_resp, HttpStreamingResponse)
 
-    # Capture upstream response headers for detailed logging
-    upstream_response_headers = (
-        dict(upstream_resp.headers) if hasattr(upstream_resp, "headers") else None
-    )
-    # Accumulate upstream response body chunks
-    upstream_response_chunks: list[dict[str, Any]] = []
+        # Capture upstream response headers for detailed logging
+        upstream_response_headers = (
+            dict(upstream_resp.headers) if hasattr(upstream_resp, "headers") else None
+        )
 
-    async with upstream_resp:
-        if upstream_resp.status_code >= 400:
-            error_sse = await _format_upstream_error(
-                upstream_resp, str(target_provider)
-            )
-            # Update detail var with error response
+        async with upstream_resp:
+            if upstream_resp.status_code >= 400:
+                error_sse = await _format_upstream_error(
+                    upstream_resp, str(target_provider)
+                )
+                # Update detail var with error response
+                _update_request_detail(
+                    "upstream_response_headers", upstream_response_headers
+                )
+                _update_request_detail("upstream_response_body", {"error": error_sse})
+                yield error_sse
+                return
+
+            # Update detail var with upstream response headers
             _update_request_detail(
                 "upstream_response_headers", upstream_response_headers
             )
-            _update_request_detail("upstream_response_body", {"error": error_sse})
-            yield error_sse
-            return
 
-        # Update detail var with upstream response headers
-        _update_request_detail("upstream_response_headers", upstream_response_headers)
+            async for line in upstream_resp.aiter_lines():
+                chunk = _parse_sse_data(line)
+                if chunk is _SENTINEL_DONE:
+                    break
+                if chunk is None:
+                    continue
 
-        async for line in upstream_resp.aiter_lines():
-            chunk = _parse_sse_data(line)
-            if chunk is _SENTINEL_DONE:
-                break
-            if chunk is None:
-                continue
+                # Accumulate upstream response chunks for logging
+                if isinstance(chunk, dict):
+                    _update_request_detail("upstream_response_body", chunk)
 
-            # Accumulate upstream response chunks for logging
-            if isinstance(chunk, dict):
-                upstream_response_chunks.append(chunk)
-                _update_request_detail("upstream_response_body", chunk)
+                chunk_count += 1
+                for sse_line in process_stream_chunk(
+                    chunk,
+                    target_converter=target_converter,
+                    source_converter=source_converter,
+                    from_ctx=from_ctx,
+                    to_ctx=to_ctx,
+                    store=store,
+                    format_sse=format_sse,
+                    target_from_transforms=target_from_transforms,
+                ):
+                    yield sse_line
 
-            chunk_count += 1
-            for sse_line in process_stream_chunk(
-                chunk,
-                target_converter=target_converter,
-                source_converter=source_converter,
-                from_ctx=from_ctx,
-                to_ctx=to_ctx,
-                store=store,
-                format_sse=format_sse,
-                target_from_transforms=target_from_transforms,
-            ):
-                yield sse_line
+        if source_provider == "openai_chat":
+            yield _format_sse_openai_chat_done()
 
-        async for line in upstream_resp.aiter_lines():
-            chunk = _parse_sse_data(line)
-            if chunk is _SENTINEL_DONE:
-                break
-            if chunk is None:
-                continue
-
-            chunk_count += 1
-            for sse_line in process_stream_chunk(
-                chunk,
-                target_converter=target_converter,
-                source_converter=source_converter,
-                from_ctx=from_ctx,
-                to_ctx=to_ctx,
-                store=store,
-                format_sse=format_sse,
-                target_from_transforms=target_from_transforms,
-            ):
-                yield sse_line
-
-    if source_provider == "openai_chat":
-        yield _format_sse_openai_chat_done()
-
-    log_stream_summary(
-        model=model,
-        duration_s=time.monotonic() - t0,
-        chunk_count=chunk_count,
-    )
+        log_stream_summary(
+            model=model,
+            duration_s=time.monotonic() - t0,
+            chunk_count=chunk_count,
+        )
+    finally:
+        finalize_stream_request_log()
 
 
 async def handle_streaming(

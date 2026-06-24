@@ -137,6 +137,9 @@ Tooling config (ruff, ty, complexipy) lives in `pyproject.toml`.
 4. Google-style docstrings on public APIs; comments in English
 5. No manual edits to `_vendor/` — update upstream, re-vendor
 6. Python ≥ 3.10 compatibility
+7. **Commit and push** — after changes pass lint and tests, always `git commit`
+   and `git push` before ending the task. Do not leave verified fixes only in
+   the working tree.
 
 ## Integration testing with agentabi
 
@@ -206,6 +209,9 @@ result = run_sync(
 - Never force-push to `master`.
 - **No AI co-author tags in commits.** Do not add `Co-authored-by` lines for AI
   tools in git commit messages. Disclose AI usage in PR descriptions instead.
+- **Agent completion checklist:** modify → `make lint` → `make test` →
+  `git commit` → `git push`. Skip commit/push only when the user explicitly
+  says not to (e.g. "don't commit yet").
 
 ## Release process
 

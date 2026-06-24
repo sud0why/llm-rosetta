@@ -61,7 +61,7 @@ def _record_telemetry(
         )
 
     request_log = getattr(request.app, "request_log", None)
-    if request_log is not None:
+    if request_log is not None and not is_stream:
         from .admin.request_log import RequestLogEntry, request_detail_var
 
         # Get detailed request/response data for logging
@@ -96,6 +96,24 @@ def _record_telemetry(
         )
         # Clear the context var after use
         request_detail_var.set(None)
+    elif request_log is not None and is_stream:
+        from .admin.request_log import pending_stream_log_var
+
+        # Defer detailed logging until the stream finishes
+        pending_stream_log_var.set(
+            {
+                "request_log": request_log,
+                "model": model,
+                "source_provider": source_provider,
+                "target_provider": target_provider,
+                "target_provider_name": provider_name,
+                "status_code": status_code,
+                "duration_ms": duration_ms,
+                "error_detail": error_detail,
+                "api_key_label": api_key_label_var.get(),
+                "client_ip": _extract_client_ip(request),
+            }
+        )
 
 
 def _extract_client_ip(request: Any) -> str | None:

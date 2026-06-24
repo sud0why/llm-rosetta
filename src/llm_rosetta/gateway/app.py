@@ -62,8 +62,10 @@ def _record_telemetry(
 
     request_log = getattr(request.app, "request_log", None)
     if request_log is not None:
-        from .admin.request_log import RequestLogEntry
+        from .admin.request_log import RequestLogEntry, request_detail_var
 
+        # Get detailed request/response data for logging
+        detail = request_detail_var.get()
         request_log.add(
             RequestLogEntry.create(
                 model=model,
@@ -76,8 +78,24 @@ def _record_telemetry(
                 error_detail=error_detail,
                 api_key_label=api_key_label_var.get(),
                 client_ip=_extract_client_ip(request),
+                request_body=detail.get("request_body") if detail else None,
+                request_headers=detail.get("request_headers") if detail else None,
+                upstream_request_body=detail.get("upstream_request_body")
+                if detail
+                else None,
+                upstream_response_body=detail.get("upstream_response_body")
+                if detail
+                else None,
+                upstream_request_headers=detail.get("upstream_request_headers")
+                if detail
+                else None,
+                upstream_response_headers=detail.get("upstream_response_headers")
+                if detail
+                else None,
             )
         )
+        # Clear the context var after use
+        request_detail_var.set(None)
 
 
 def _extract_client_ip(request: Any) -> str | None:
@@ -201,6 +219,8 @@ async def _proxy_handler(
         # Resolve config-level reasoning override (keyed by gateway model name)
         reasoning_override = _config.model_reasoning_overrides.get(model)
         model_caps = _config.model_capabilities.get(model, ["text"])
+        # Capture request headers for detailed logging
+        request_headers = dict(request.headers) if hasattr(request, "headers") else None
         response = await handler(
             source_provider,
             target_provider,
@@ -212,6 +232,7 @@ async def _proxy_handler(
             target_shim_name=target_shim_name,
             reasoning_config_override=reasoning_override,
             model_capabilities=model_caps,
+            request_headers=request_headers,
         )
         status_code = response.status_code
         if status_code >= 400 and hasattr(response, "body"):

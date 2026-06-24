@@ -223,3 +223,18 @@ async def network_diagnostics(request: Any) -> Response:
 async def get_host_ip(request: Any) -> Response:
     """Return the detected Docker host IP (lightweight, no network calls)."""
     return JSONResponse(_detect_host_ip())
+
+
+async def get_request_detail(request: Any, id: str) -> Response:
+    try:
+        log = request.app.request_log
+        entry = log.get_entry(id)
+        if entry is None:
+            return JSONResponse({"error": "Not found"}, status_code=404)
+        return JSONResponse(entry)
+    except Exception as e:
+        import traceback
+
+        return JSONResponse(
+            {"error": str(e), "trace": traceback.format_exc()}, status_code=500
+        )

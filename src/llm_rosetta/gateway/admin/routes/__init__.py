@@ -54,6 +54,7 @@ from .observability import (
     get_host_ip,
     get_metrics,
     get_provider_key,
+    get_request_detail,
     get_request_key_labels,
     get_requests,
     network_diagnostics,
@@ -97,6 +98,7 @@ def register_admin_routes(app: Any) -> None:
     app.route("/admin/api/requests", methods=["GET"])(get_requests)
     app.route("/admin/api/requests/key-labels", methods=["GET"])(get_request_key_labels)
     app.route("/admin/api/requests", methods=["DELETE"])(clear_requests)
+    app.route("/admin/api/requests/<id>", methods=["GET"])(get_request_detail)
     # Network diagnostics
     app.route("/admin/api/diagnostics/network", methods=["GET"])(network_diagnostics)
     app.route("/admin/api/diagnostics/host-ip", methods=["GET"])(get_host_ip)

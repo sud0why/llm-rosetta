@@ -6,6 +6,7 @@ in-memory ring buffer otherwise.
 
 from __future__ import annotations
 
+import contextvars
 import uuid
 from collections import deque
 from dataclasses import dataclass
@@ -14,6 +15,11 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .persistence import PersistenceManager
+
+# Per-request detailed log data — set by proxy handler, read by _record_telemetry.
+request_detail_var: contextvars.ContextVar[dict[str, Any] | None] = (
+    contextvars.ContextVar("request_detail", default=None)
+)
 
 
 @dataclass(frozen=True)
@@ -32,6 +38,13 @@ class RequestLogEntry:
     api_key_label: str | None = None
     target_provider_name: str | None = None
     client_ip: str | None = None
+    # Detailed request/response bodies and headers (for debug view)
+    request_body: dict[str, Any] | None = None
+    request_headers: dict[str, str] | None = None
+    upstream_request_body: dict[str, Any] | None = None
+    upstream_response_body: dict[str, Any] | None = None
+    upstream_request_headers: dict[str, str] | None = None
+    upstream_response_headers: dict[str, str] | None = None
 
     @classmethod
     def create(
@@ -47,6 +60,12 @@ class RequestLogEntry:
         api_key_label: str | None = None,
         target_provider_name: str | None = None,
         client_ip: str | None = None,
+        request_body: dict[str, Any] | None = None,
+        request_headers: dict[str, str] | None = None,
+        upstream_request_body: dict[str, Any] | None = None,
+        upstream_response_body: dict[str, Any] | None = None,
+        upstream_request_headers: dict[str, str] | None = None,
+        upstream_response_headers: dict[str, str] | None = None,
     ) -> RequestLogEntry:
         """Factory with auto-generated id and timestamp."""
         return cls(
@@ -62,6 +81,12 @@ class RequestLogEntry:
             api_key_label=api_key_label,
             target_provider_name=target_provider_name,
             client_ip=client_ip,
+            request_body=request_body,
+            request_headers=request_headers,
+            upstream_request_body=upstream_request_body,
+            upstream_response_body=upstream_response_body,
+            upstream_request_headers=upstream_request_headers,
+            upstream_response_headers=upstream_response_headers,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -84,6 +109,19 @@ class RequestLogEntry:
             d["target_provider_name"] = self.target_provider_name
         if self.client_ip is not None:
             d["client_ip"] = self.client_ip
+        # Detailed request/response (optional, only included when present)
+        if self.request_body is not None:
+            d["request_body"] = self.request_body
+        if self.request_headers is not None:
+            d["request_headers"] = self.request_headers
+        if self.upstream_request_body is not None:
+            d["upstream_request_body"] = self.upstream_request_body
+        if self.upstream_response_body is not None:
+            d["upstream_response_body"] = self.upstream_response_body
+        if self.upstream_request_headers is not None:
+            d["upstream_request_headers"] = self.upstream_request_headers
+        if self.upstream_response_headers is not None:
+            d["upstream_response_headers"] = self.upstream_response_headers
         return d
 
 

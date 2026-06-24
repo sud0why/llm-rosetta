@@ -115,7 +115,14 @@ class PersistenceManager:
                 error_detail    TEXT,
                 api_key_label   TEXT,
                 target_provider_name TEXT,
-                client_ip       TEXT
+                client_ip       TEXT,
+                -- Detailed request/response logging
+                request_body    TEXT,
+                request_headers TEXT,
+                upstream_request_body TEXT,
+                upstream_response_body TEXT,
+                upstream_request_headers TEXT,
+                upstream_response_headers TEXT
             );
             CREATE INDEX IF NOT EXISTS idx_rl_timestamp
                 ON request_log(timestamp DESC);
@@ -133,7 +140,16 @@ class PersistenceManager:
         cursor = self._conn.execute("PRAGMA table_info(request_log)")
         columns = {row[1] for row in cursor.fetchall()}
         added = False
-        for col in ("target_provider_name", "client_ip"):
+        for col in (
+            "target_provider_name",
+            "client_ip",
+            "request_body",
+            "request_headers",
+            "upstream_request_body",
+            "upstream_response_body",
+            "upstream_request_headers",
+            "upstream_response_headers",
+        ):
             if col not in columns:
                 self._conn.execute(f"ALTER TABLE request_log ADD COLUMN {col} TEXT")
                 added = True
@@ -184,6 +200,12 @@ class PersistenceManager:
         "api_key_label",
         "target_provider_name",
         "client_ip",
+        "request_body",
+        "request_headers",
+        "upstream_request_body",
+        "upstream_response_body",
+        "upstream_request_headers",
+        "upstream_response_headers",
     ]
 
     def insert_log_entries(self, entries: list[dict[str, Any]]) -> None:
@@ -194,8 +216,10 @@ class PersistenceManager:
             "INSERT OR IGNORE INTO request_log "
             "(id, timestamp, model, source_provider, target_provider, "
             "is_stream, status_code, duration_ms, error_detail, api_key_label, "
-            "target_provider_name, client_ip) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "target_provider_name, client_ip, "
+            "request_body, request_headers, upstream_request_body, upstream_response_body, "
+            "upstream_request_headers, upstream_response_headers) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 (
                     e["id"],
@@ -210,6 +234,24 @@ class PersistenceManager:
                     e.get("api_key_label"),
                     e.get("target_provider_name"),
                     e.get("client_ip"),
+                    json.dumps(e["request_body"])
+                    if e.get("request_body") is not None
+                    else None,
+                    json.dumps(e["request_headers"])
+                    if e.get("request_headers") is not None
+                    else None,
+                    json.dumps(e["upstream_request_body"])
+                    if e.get("upstream_request_body") is not None
+                    else None,
+                    json.dumps(e["upstream_response_body"])
+                    if e.get("upstream_response_body") is not None
+                    else None,
+                    json.dumps(e["upstream_request_headers"])
+                    if e.get("upstream_request_headers") is not None
+                    else None,
+                    json.dumps(e["upstream_response_headers"])
+                    if e.get("upstream_response_headers") is not None
+                    else None,
                 )
                 for e in entries
             ],
@@ -433,8 +475,29 @@ class PersistenceManager:
         for col, val in zip(cls._LOG_COLUMNS, row):
             if col == "is_stream":
                 d[col] = bool(val)
-            elif col in ("error_detail", "api_key_label", "client_ip") and val is None:
-                continue  # omit None optional fields (match old behavior)
+            elif (
+                col
+                in (
+                    "error_detail",
+                    "api_key_label",
+                    "client_ip",
+                )
+                and val is None
+            ):
+                continue  # omit None optional fields
+            elif col in (
+                "request_body",
+                "request_headers",
+                "upstream_request_body",
+                "upstream_response_body",
+                "upstream_request_headers",
+                "upstream_response_headers",
+            ):
+                if val is not None:
+                    try:
+                        d[col] = json.loads(val)
+                    except json.JSONDecodeError:
+                        d[col] = val
             else:
                 d[col] = val
         return d

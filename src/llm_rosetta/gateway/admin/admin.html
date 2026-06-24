@@ -457,6 +457,95 @@ th.sortable.desc::after { content:'\25BC';opacity:.8; }
 .db-footer .v.crit { color: var(--red); }
 .db-footer.hidden { display: none; }
 body { padding-bottom: 26px; }
+
+/* Log Detail Modal */
+.modal-detail { width: 90vw; max-width: 1100px; max-height: 90vh; padding: 0; }
+.modal-detail .modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+}
+.modal-detail .modal-header h3 { margin: 0; font-size: 16px; }
+.modal-detail .modal-body {
+  padding: 16px 24px; max-height: calc(90vh - 100px); overflow: auto;
+}
+.modal-detail .modal-actions {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 16px 24px; border-top: 1px solid var(--border);
+}
+
+/* Detail tabs */
+.detail-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+.detail-tab {
+  padding: 10px 20px; cursor: pointer; font-size: 13px; color: var(--text-dim);
+  border-bottom: 2px solid transparent; transition: all 0.15s;
+}
+.detail-tab:hover { color: var(--text); }
+.detail-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* JSON Viewer */
+.json-viewer { font-family: var(--mono); font-size: 12px; line-height: 1.6; }
+.json-viewer .json-key { color: var(--blue); }
+.json-viewer .json-string { color: var(--green); }
+.json-viewer .json-number { color: var(--orange); }
+.json-viewer .json-boolean { color: var(--purple); }
+.json-viewer .json-null { color: var(--text-dim); }
+.json-viewer .json-brace { color: var(--text-dim); }
+.json-viewer .json-bracket { color: var(--text-dim); }
+.json-viewer .json-colon { color: var(--text-dim); }
+.json-viewer .json-comma { color: var(--text-dim); }
+.json-viewer .collapsed { cursor: pointer; color: var(--text-dim); }
+.json-viewer .collapsed::before { content: '...'; margin: 0 4px; }
+.json-viewer .expandable { cursor: pointer; }
+.json-viewer .expandable > .json-key::before { content: '▶ '; display: inline-block; transition: transform 0.15s; font-size: 10px; }
+.json-viewer .expandable.expanded > .json-key::before { transform: rotate(90deg); }
+.json-viewer .json-object, .json-viewer .json-array { margin-left: 16px; }
+.json-viewer .json-object.collapsed > .json-brace,
+.json-viewer .json-object.collapsed ~ .json-brace,
+.json-viewer .json-array.collapsed > .json-bracket,
+.json-viewer .json-array.collapsed ~ .json-bracket { display: none; }
+.json-viewer .json-object.collapsed .json-key,
+.json-viewer .json-object.collapsed .json-string,
+.json-viewer .json-object.collapsed .json-number,
+.json-viewer .json-object.collapsed .json-boolean,
+.json-viewer .json-object.collapsed .json-null,
+.json-viewer .json-object.collapsed .json-colon,
+.json-viewer .json-object.collapsed .json-comma,
+.json-viewer .json-array.collapsed .json-string,
+.json-viewer .json-array.collapsed .json-number,
+.json-viewer .json-array.collapsed .json-boolean,
+.json-viewer .json-array.collapsed .json-null,
+.json-viewer .json-array.collapsed .json-comma { display: none; }
+.json-viewer .json-viewer-actions {
+  display: flex; gap: 8px; margin-bottom: 8px; padding: 8px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.json-viewer .json-viewer-actions .btn { font-size: 11px; }
+.json-viewer .json-content { max-height: 60vh; overflow: auto; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; white-space: pre; }
+
+/* Detail sections */
+.detail-section { margin-bottom: 24px; }
+.detail-section h4 { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.detail-section .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.detail-section .section-title { font-size: 13px; font-weight: 600; }
+.detail-section .section-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--bg); color: var(--text-dim); border: 1px solid var(--border); font-family: var(--mono); }
+
+/* Request/Response flow diagram */
+.flow-diagram { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); }
+.flow-step { display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); }
+.flow-step .step-label { color: var(--text-dim); font-size: 11px; }
+.flow-step .step-value { font-family: var(--mono); font-size: 11px; }
+.flow-arrow { color: var(--text-dim); }
+
+/* Loading state */
+.detail-loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--text-dim); }
+.detail-loading .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 12px; }
+
+/* Error state */
+.detail-error { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--red); text-align: center; }
+
+/* Copy button feedback */
+.btn.copied { background: var(--green); border-color: var(--green); color: #fff; }
+
 </style>
 </head>
 <body class="auth-pending">
@@ -621,7 +710,7 @@ body { padding-bottom: 26px; }
       <button class="btn btn-sm" onclick="resetLogFilters()" data-i18n="btn.resetFilters">Reset Filters</button>
     </div>
     <div class="table-scroll"><table>
-      <thead><tr><th data-i18n="col.time">Time</th><th data-i18n="col.model">Model</th><th data-i18n="col.sourceTarget">Source &rarr; Target</th><th data-i18n="col.mode">Mode</th><th data-i18n="col.apiKey">API Key</th><th data-i18n="col.clientIp">Client IP</th><th data-i18n="col.status">Status</th><th data-i18n="col.duration">Duration</th></tr></thead>
+      <thead><tr><th data-i18n="col.time">Time</th><th data-i18n="col.model">Model</th><th data-i18n="col.sourceTarget">Source &rarr; Target</th><th data-i18n="col.mode">Mode</th><th data-i18n="col.apiKey">API Key</th><th data-i18n="col.clientIp">Client IP</th><th data-i18n="col.status">Status</th><th data-i18n="col.duration">Duration</th><th style="text-align:center" data-i18n="col.action">Action</th></tr></thead>
       <tbody id="logTable"></tbody>
     </table></div>
     <div class="pagination">
@@ -895,6 +984,28 @@ body { padding-bottom: 26px; }
   </div>
 </div>
 
+<!-- Log Detail Modal -->
+<div class="modal-overlay" id="logDetailModal">
+  <div class="modal modal-detail">
+    <div class="modal-header">
+      <h3 data-i18n="detail.title">Request Detail</h3>
+      <button class="btn btn-sm" onclick="closeModal('logDetailModal')" data-i18n="btn.close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="logDetailBody">
+      <div class="detail-loading">
+        <div class="spinner"></div>
+        <span data-i18n="detail.loading">Loading...</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="copyDetailJson()" data-i18n="detail.copyJson">Copy JSON</button>
+      <button class="btn" onclick="closeModal('logDetailModal')" data-i18n="btn.close">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -1042,6 +1153,40 @@ const I18N = {
     'footer.tip.wal':'SQLite write-ahead log size',
     'confirm.sure':'Sure?',
     'confirm.yes':'Yes',
+    // Detail view
+    'col.action':'Action',
+    'detail.title':'Request Detail',
+    'detail.loading':'Loading...',
+    'detail.loadError':'Failed to load detail: {error}',
+    'detail.overview':'Overview',
+    'detail.time':'Time',
+    'detail.model':'Model',
+    'detail.sourceProvider':'Source Provider',
+    'detail.targetProvider':'Target Provider',
+    'detail.mode':'Mode',
+    'detail.apiKey':'API Key',
+    'detail.clientIp':'Client IP',
+    'detail.status':'Status',
+    'detail.duration':'Duration',
+    'detail.error':'Error',
+    'detail.stream':'Stream',
+    'detail.downstream':'Downstream Request',
+    'detail.gateway':'Gateway',
+    'detail.upstream':'Upstream Request',
+    'detail.requestBody':'Request Body (Downstream → Gateway)',
+    'detail.requestHeaders':'Request Headers (Downstream → Gateway)',
+    'detail.upstreamRequestBody':'Request Body (Gateway → Upstream)',
+    'detail.upstreamRequestHeaders':'Request Headers (Gateway → Upstream)',
+    'detail.upstreamResponseBody':'Response Body (Upstream → Gateway)',
+    'detail.upstreamResponseHeaders':'Response Headers (Upstream → Gateway)',
+    'detail.downstreamRequest':'Downstream → Gateway',
+    'detail.upstreamRequest':'Gateway → Upstream',
+    'detail.upstreamResponse':'Upstream → Gateway',
+    'detail.headers':'Headers',
+    'detail.copy':'Copy',
+    'detail.copied':'Copied',
+    'detail.copyJson':'Copy All as JSON',
+    'detail.viewDetails':'View Details',
   },
   zh: {
     'btn.logout':'\u9000\u51fa\u767b\u5f55',
@@ -1151,6 +1296,40 @@ const I18N = {
     'footer.tip.wal':'SQLite \u9884\u5199\u65e5\u5fd7\u6587\u4ef6\u5927\u5c0f',
     'confirm.sure':'\u786e\u5b9a\uff1f',
     'confirm.yes':'\u662f',
+    // Detail view
+    'col.action':'\u64cd\u4f5c',
+    'detail.title':'\u8bf7\u6c42\u8be6\u60c5',
+    'detail.loading':'\u52a0\u8f7d\u4e2d...',
+    'detail.loadError':'\u52a0\u8f7d\u8be6\u60c5\u5931\u8d25: {error}',
+    'detail.overview':'\u6982\u89c8',
+    'detail.time':'\u65f6\u95f4',
+    'detail.model':'\u6a21\u578b',
+    'detail.sourceProvider':'\u6765\u6e90\u670d\u52a1\u65b9',
+    'detail.targetProvider':'\u76ee\u6807\u670d\u52a1\u65b9',
+    'detail.mode':'\u6a21\u5f0f',
+    'detail.apiKey':'API \u5bc6\u94a5',
+    'detail.clientIp':'\u5ba2\u6237\u7aef IP',
+    'detail.status':'\u72b6\u6001',
+    'detail.duration':'\u8017\u65f6',
+    'detail.error':'\u9519\u8bef',
+    'detail.stream':'\u6d41\u5f0f',
+    'detail.downstream':'\u4e0b\u6e38\u8bf7\u6c42',
+    'detail.gateway':'\u7f51\u5173',
+    'detail.upstream':'\u4e0a\u6e38\u8bf7\u6c42',
+    'detail.requestBody':'\u8bf7\u6c42\u5185\u5bb9 (\u4e0b\u6e38 \u2192 \u7f51\u5173)',
+    'detail.requestHeaders':'\u8bf7\u6c42\u5934 (\u4e0b\u6e38 \u2192 \u7f51\u5173)',
+    'detail.upstreamRequestBody':'\u8bf7\u6c42\u5185\u5bb9 (\u7f51\u5173 \u2192 \u4e0a\u6e38)',
+    'detail.upstreamRequestHeaders':'\u8bf7\u6c42\u5934 (\u7f51\u5173 \u2192 \u4e0a\u6e38)',
+    'detail.upstreamResponseBody':'\u54cd\u5e94\u5185\u5bb9 (\u4e0a\u6e38 \u2192 \u7f51\u5173)',
+    'detail.upstreamResponseHeaders':'\u54cd\u5e94\u5934 (\u4e0a\u6e38 \u2192 \u7f51\u5173)',
+    'detail.downstreamRequest':'\u4e0b\u6e38 \u2192 \u7f51\u5173',
+    'detail.upstreamRequest':'\u7f51\u5173 \u2192 \u4e0a\u6e38',
+    'detail.upstreamResponse':'\u4e0a\u6e38 \u2192 \u7f51\u5173',
+    'detail.headers':'\u5934\u4fe1\u606f',
+    'detail.copy':'\u590d\u5236',
+    'detail.copied':'\u5df2\u590d\u5236',
+    'detail.copyJson':'\u590d\u5236\u5168\u90e8 JSON',
+    'detail.viewDetails':'\u67e5\u770b\u8be6\u60c5',
   },
 };
 
@@ -2617,6 +2796,7 @@ function renderLogs(entries, total) {
       const rowStyle = hasError ? ` style="cursor:pointer" onclick="toggleLogRow('${rowId}',this)"` : '';
       const expandHint = hasError ? ' title="Click to expand error"' : '';
       const clientIp = e.client_ip || '—';
+      const detailBtn = `<button class="btn btn-sm" style="padding:4px" onclick="openLogDetail('${esc(e.id)}')" title="${t('detail.viewDetails')}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>`;
       let rows = `<tr${rowStyle}${expandHint}>
         <td>${time}</td>
         <td><code>${esc(e.model)}</code></td>
@@ -2626,9 +2806,10 @@ function renderLogs(entries, total) {
         <td style="font-size:12px;color:var(--text-dim)">${esc(clientIp)}</td>
         <td><span class="badge ${statusCls}">${e.status_code}${hasError ? ' ▸' : ''}</span></td>
         <td>${e.duration_ms.toFixed(0)} ms</td>
+        <td style="text-align:center">${detailBtn}</td>
       </tr>`;
       if (hasError) {
-        rows += `<tr${isExpanded ? '' : ' hidden'}><td colspan="8"><pre style="margin:0;padding:8px;background:var(--bg);border-radius:6px;font-size:11px;max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-all">${esc(e.error_detail)}</pre></td></tr>`;
+        rows += `<tr${isExpanded ? '' : ' hidden'}><td colspan="9"><pre style="margin:0;padding:8px;background:var(--bg);border-radius:6px;font-size:11px;max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-all">${esc(e.error_detail)}</pre></td></tr>`;
       }
       return rows;
     }).join('');
@@ -2656,6 +2837,170 @@ function changePage(dir) {
   loadLogs();
 }
 
+// ===================== Log Detail View =====================
+function openLogDetail(id) {
+  const modal = document.getElementById('logDetailModal');
+  const body = document.getElementById('logDetailBody');
+  modal.classList.add('open');
+  body.innerHTML = `
+    <div class="detail-loading">
+      <div class="spinner"></div>
+      <span data-i18n="detail.loading">${t('detail.loading')}</span>
+    </div>
+  `;
+  api.get(`/admin/api/requests/${encodeURIComponent(id)}`).then(data => {
+    renderLogDetail(data);
+  }).catch(err => {
+    body.innerHTML = `
+      <div class="detail-error">
+        <p>${t('detail.loadError', {error: err.message})}</p>
+      </div>
+    `;
+  });
+}
+
+function renderLogDetail(data) {
+  const body = document.getElementById('logDetailBody');
+  const time = new Date(data.timestamp).toLocaleString(undefined, {month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  const statusCls = data.status_code < 400 ? 'badge-ok' : 'badge-error';
+  const modeBadge = data.is_stream ? '<span class="badge badge-stream" data-i18n="detail.stream">stream</span>' : '';
+  const keyLabel = data.api_key_label || '—';
+  const clientIp = data.client_ip || '—';
+  const sourceProvider = data.source_provider;
+  const targetProvider = data.target_provider_name || resolveProviderName(data.target_provider);
+
+  let html = `
+    <div class="detail-section">
+      <div class="section-header">
+        <h4 data-i18n="detail.overview">Overview</h4>
+      </div>
+      <div class="flow-diagram">
+        <div class="flow-step"><span class="step-label" data-i18n="detail.downstream">Downstream</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-label" data-i18n="detail.gateway">Gateway</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-label" data-i18n="detail.upstream">Upstream</span></div>
+      </div>
+      <div style="margin-top:12px; display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.time">Time</div><div>${time}</div></div>
+        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.model">Model</div><div><code>${esc(data.model)}</code></div></div>
+        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.sourceProvider">Source</div><div>${esc(sourceProvider)}</div></div>
+        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.targetProvider">Target</div><div>${esc(targetProvider)}</div></div>
+        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.mode">Mode</div><div>${modeBadge}</div></div>
+        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.apiKey">API Key</div><div style="font-size:12px;color:var(--text-dim)">${esc(keyLabel)}</div></div>
+        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.clientIp">Client IP</div><div style="font-size:12px;color:var(--text-dim)">${esc(clientIp)}</div></div>
+        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.status">Status</div><div><span class="badge ${statusCls}">${data.status_code}</span></div></div>
+        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.duration">Duration</div><div>${data.duration_ms.toFixed(0)} ms</div></div>
+        ${data.error_detail ? `<div class="detail-section" style="margin-top:12px"><h4 data-i18n="detail.error">Error</h4><pre style="margin:0;padding:8px;background:var(--bg);border-radius:6px;font-size:11px;max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-all;color:var(--red)">${esc(data.error_detail)}</pre></div>` : ''}
+      </div>
+    </div>
+  `;
+
+  // Request/Response sections
+  const sections = [
+    { key: 'request_body', title: 'detail.requestBody', badge: 'detail.downstreamRequest' },
+    { key: 'request_headers', title: 'detail.requestHeaders', badge: 'detail.headers' },
+    { key: 'upstream_request_body', title: 'detail.upstreamRequestBody', badge: 'detail.upstreamRequest' },
+    { key: 'upstream_request_headers', title: 'detail.upstreamRequestHeaders', badge: 'detail.headers' },
+    { key: 'upstream_response_body', title: 'detail.upstreamResponseBody', badge: 'detail.upstreamResponse' },
+    { key: 'upstream_response_headers', title: 'detail.upstreamResponseHeaders', badge: 'detail.headers' },
+  ];
+
+  for (const sec of sections) {
+    const value = data[sec.key];
+    if (value !== undefined && value !== null) {
+      const isHeaders = sec.key.includes('headers');
+      html += `
+        <div class="detail-section">
+          <div class="section-header">
+            <h4 data-i18n="${sec.title}">${t(sec.title)}</h4>
+            <span class="section-badge" data-i18n="${sec.badge}">${t(sec.badge)}</span>
+          </div>
+          <div class="json-viewer" data-json='${esc(JSON.stringify(value))}'></div>
+        </div>
+      `;
+    }
+  }
+
+  body.innerHTML = html;
+  // Initialize JSON viewers
+  document.querySelectorAll('.json-viewer[data-json]').forEach(el => {
+    try {
+      const json = JSON.parse(el.dataset.json);
+      el.innerHTML = renderJsonViewer(json);
+      // Add copy button
+      const actions = document.createElement('div');
+      actions.className = 'json-viewer-actions';
+      actions.innerHTML = `<button class="btn btn-sm" onclick="copyJsonToClipboard(this, ${esc(JSON.stringify(json))})" data-i18n="detail.copy">${t('detail.copy')}</button>`;
+      el.insertBefore(actions, el.firstChild);
+    } catch(e) {
+      el.textContent = String(el.dataset.json);
+    }
+  });
+}
+
+function renderJsonViewer(obj, depth = 0) {
+  if (obj === null) return '<span class="json-null">null</span>';
+  if (obj === undefined) return '<span class="json-null">undefined</span>';
+  const type = typeof obj;
+  if (type === 'string') return `<span class="json-string">"${esc(obj)}"</span>`;
+  if (type === 'number') return `<span class="json-number">${obj}</span>`;
+  if (type === 'boolean') return `<span class="json-boolean">${obj}</span>`;
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) return '<span class="json-bracket">[]</span>';
+    const items = obj.map((v, i) => `
+      <div style="margin-left:${(depth+1)*16}px">
+        <span class="json-bracket">[</span>
+        ${renderJsonViewer(v, depth+1)}
+        <span class="json-bracket">${i === obj.length-1 ? ']' : '],'}</span>
+      </div>
+    `).join('');
+    return `<span class="json-bracket">[</span>${items}<span class="json-bracket">]</span>`;
+  }
+  if (type === 'object') {
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return '<span class="json-brace">{}</span>';
+    const items = keys.map((k, i) => `
+      <div class="expandable" style="margin-left:${(depth+1)*16}px">
+        <span class="json-key">"${esc(k)}"</span>
+        <span class="json-colon">:</span>
+        ${renderJsonViewer(obj[k], depth+1)}
+        <span class="json-comma">${i === keys.length-1 ? '' : ','}</span>
+      </div>
+    `).join('');
+    return `<span class="json-brace">{</span>${items}<span class="json-brace">}</span>`;
+  }
+  return String(obj);
+}
+
+function copyJsonToClipboard(btn, json) {
+  navigator.clipboard.writeText(JSON.stringify(json, null, 2)).then(() => {
+    btn.classList.add('copied');
+    btn.textContent = t('detail.copied');
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.textContent = t('detail.copy');
+    }, 1500);
+  }).catch(() => {
+    showToast('Copy failed', 'error');
+  });
+}
+
+function copyDetailJson() {
+  const viewers = document.querySelectorAll('#logDetailBody .json-viewer[data-json]');
+  const combined = {};
+  viewers.forEach(v => {
+    try {
+      const key = v.closest('.detail-section').querySelector('h4').textContent;
+      combined[key] = JSON.parse(v.dataset.json);
+    } catch(e) {}
+  });
+  navigator.clipboard.writeText(JSON.stringify(combined, null, 2)).then(() => {
+    showToast(t('toast.copied'));
+  }).catch(() => {
+    showToast('Copy failed', 'error');
+  });
+}
 
 function deleteModel(name, btn) {
   if (!btn) { _doDeleteModel(name); return; }

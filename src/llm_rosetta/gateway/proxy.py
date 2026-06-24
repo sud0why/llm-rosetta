@@ -43,6 +43,7 @@ from .logging import (
     log_upstream_error,
 )
 from .providers import ProviderInfo
+from .admin.request_log import request_detail_var
 
 logger = get_logger()
 
@@ -533,6 +534,7 @@ async def handle_non_streaming(
     target_shim_name: str | None = None,
     reasoning_config_override: dict[str, Any] | None = None,
     model_capabilities: list[str] | None = None,
+    request_headers: dict[str, str] | None = None,
 ) -> Response:
     """Non-streaming proxy: convert -> forward -> convert back -> respond."""
     store = metadata_store or _default_metadata_store
@@ -668,6 +670,22 @@ async def handle_non_streaming(
     # 6b. Cache provider_metadata from tool calls for follow-up requests
     store.cache_from_response(ir_response)
 
+    # Store detailed request/response for logging
+    request_detail_var.set(
+        {
+            "request_body": body,
+            "request_headers": request_headers,
+            "upstream_request_body": upstream_body,
+            "upstream_response_body": upstream_json,
+            "upstream_request_headers": upstream_resp.headers
+            if hasattr(upstream_resp, "headers")
+            else None,
+            "upstream_response_headers": dict(upstream_resp.headers)
+            if hasattr(upstream_resp, "headers")
+            else None,
+        }
+    )
+
     # 7. IR -> Source response
     try:
         source_response = source_converter.response_to_provider(
@@ -761,6 +779,13 @@ def process_stream_chunk(
     return result
 
 
+def _update_request_detail(key: str, value: Any) -> None:
+    """Update a field in the current request detail context var, if active."""
+    detail = request_detail_var.get()
+    if detail is not None:
+        detail[key] = value
+
+
 async def _stream_event_generator(
     *,
     source_provider: ProviderType,
@@ -795,13 +820,54 @@ async def _stream_event_generator(
         url, json=upstream_body, headers=headers, stream=True
     )
     assert isinstance(upstream_resp, HttpStreamingResponse)
+
+    # Capture upstream response headers for detailed logging
+    upstream_response_headers = (
+        dict(upstream_resp.headers) if hasattr(upstream_resp, "headers") else None
+    )
+    # Accumulate upstream response body chunks
+    upstream_response_chunks: list[dict[str, Any]] = []
+
     async with upstream_resp:
         if upstream_resp.status_code >= 400:
             error_sse = await _format_upstream_error(
                 upstream_resp, str(target_provider)
             )
+            # Update detail var with error response
+            _update_request_detail(
+                "upstream_response_headers", upstream_response_headers
+            )
+            _update_request_detail("upstream_response_body", {"error": error_sse})
             yield error_sse
             return
+
+        # Update detail var with upstream response headers
+        _update_request_detail("upstream_response_headers", upstream_response_headers)
+
+        async for line in upstream_resp.aiter_lines():
+            chunk = _parse_sse_data(line)
+            if chunk is _SENTINEL_DONE:
+                break
+            if chunk is None:
+                continue
+
+            # Accumulate upstream response chunks for logging
+            if isinstance(chunk, dict):
+                upstream_response_chunks.append(chunk)
+                _update_request_detail("upstream_response_body", chunk)
+
+            chunk_count += 1
+            for sse_line in process_stream_chunk(
+                chunk,
+                target_converter=target_converter,
+                source_converter=source_converter,
+                from_ctx=from_ctx,
+                to_ctx=to_ctx,
+                store=store,
+                format_sse=format_sse,
+                target_from_transforms=target_from_transforms,
+            ):
+                yield sse_line
 
         async for line in upstream_resp.aiter_lines():
             chunk = _parse_sse_data(line)
@@ -845,6 +911,7 @@ async def handle_streaming(
     target_shim_name: str | None = None,
     reasoning_config_override: dict[str, Any] | None = None,
     model_capabilities: list[str] | None = None,
+    request_headers: dict[str, str] | None = None,
 ) -> Response | StreamingResponse:
     """Streaming proxy: convert -> forward -> stream-convert back -> SSE."""
     store = metadata_store or _default_metadata_store
@@ -935,6 +1002,18 @@ async def handle_streaming(
 
     # -- body log: target request body --
     log_converted_request(upstream_body)
+
+    # Store detailed request/response for logging (partial for streaming)
+    request_detail_var.set(
+        {
+            "request_body": body,
+            "request_headers": request_headers,
+            "upstream_request_body": upstream_body,
+            "upstream_request_headers": headers,
+            "upstream_response_body": None,  # Will be populated during streaming
+            "upstream_response_headers": None,  # Will be populated during streaming
+        }
+    )
 
     format_sse = SSE_FORMATTERS[source_provider]
 

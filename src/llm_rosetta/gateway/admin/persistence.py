@@ -143,8 +143,13 @@ class PersistenceManager:
         for col in (
             "target_provider_name",
             "client_ip",
+            "request_path",
+            "request_method",
+            "upstream_url",
             "request_body",
             "request_headers",
+            "response_body",
+            "response_headers",
             "upstream_request_body",
             "upstream_response_body",
             "upstream_request_headers",
@@ -200,13 +205,20 @@ class PersistenceManager:
         "api_key_label",
         "target_provider_name",
         "client_ip",
+        "request_path",
+        "request_method",
+        "upstream_url",
         "request_body",
         "request_headers",
+        "response_body",
+        "response_headers",
         "upstream_request_body",
         "upstream_response_body",
         "upstream_request_headers",
         "upstream_response_headers",
     ]
+
+    _LOG_COLUMNS_SQL = ", ".join(_LOG_COLUMNS)
 
     def insert_log_entries(self, entries: list[dict[str, Any]]) -> None:
         """Insert request log entries, pruning oldest if over capacity."""
@@ -216,10 +228,11 @@ class PersistenceManager:
             "INSERT OR IGNORE INTO request_log "
             "(id, timestamp, model, source_provider, target_provider, "
             "is_stream, status_code, duration_ms, error_detail, api_key_label, "
-            "target_provider_name, client_ip, "
-            "request_body, request_headers, upstream_request_body, upstream_response_body, "
+            "target_provider_name, client_ip, request_path, request_method, upstream_url, "
+            "request_body, request_headers, response_body, response_headers, "
+            "upstream_request_body, upstream_response_body, "
             "upstream_request_headers, upstream_response_headers) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 (
                     e["id"],
@@ -234,11 +247,20 @@ class PersistenceManager:
                     e.get("api_key_label"),
                     e.get("target_provider_name"),
                     e.get("client_ip"),
+                    e.get("request_path"),
+                    e.get("request_method"),
+                    e.get("upstream_url"),
                     json.dumps(e["request_body"])
                     if e.get("request_body") is not None
                     else None,
                     json.dumps(e["request_headers"])
                     if e.get("request_headers") is not None
+                    else None,
+                    json.dumps(e["response_body"])
+                    if e.get("response_body") is not None
+                    else None,
+                    json.dumps(e["response_headers"])
+                    if e.get("response_headers") is not None
                     else None,
                     json.dumps(e["upstream_request_body"])
                     if e.get("upstream_request_body") is not None
@@ -330,7 +352,7 @@ class PersistenceManager:
         total = count_row[0] if count_row else 0
 
         rows = self._conn.execute(
-            f"SELECT * FROM request_log {where_sql} "
+            f"SELECT {self._LOG_COLUMNS_SQL} FROM request_log {where_sql} "
             f"ORDER BY timestamp DESC LIMIT ? OFFSET ?",
             [*params, limit, offset],
         ).fetchall()
@@ -341,7 +363,8 @@ class PersistenceManager:
     def get_log_entry(self, entry_id: str) -> dict[str, Any] | None:
         """Return a single log entry by id, or ``None``."""
         row = self._conn.execute(
-            "SELECT * FROM request_log WHERE id = ?", (entry_id,)
+            f"SELECT {self._LOG_COLUMNS_SQL} FROM request_log WHERE id = ?",
+            (entry_id,),
         ).fetchone()
         if row is None:
             return None
@@ -488,6 +511,8 @@ class PersistenceManager:
             elif col in (
                 "request_body",
                 "request_headers",
+                "response_body",
+                "response_headers",
                 "upstream_request_body",
                 "upstream_response_body",
                 "upstream_request_headers",

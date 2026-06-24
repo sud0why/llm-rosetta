@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import time
 import uuid
+from email.utils import formatdate
 from typing import Any, cast
 
 from llm_rosetta._vendor.httpserver import (
@@ -30,6 +32,45 @@ from .proxy import (
 )
 
 logger = get_logger()
+
+
+def _outbound_response_headers(response: Any, request: Any) -> dict[str, str]:
+    """Reconstruct response headers as the client receives them on the wire."""
+    hdrs = {k: v for k, v in dict(getattr(response, "headers", {})).items()}
+    body = getattr(response, "body", None)
+    if body is not None:
+        if isinstance(body, str):
+            body = body.encode("utf-8")
+        hdrs.setdefault("Content-Length", str(len(body)))
+    content_type = getattr(response, "content_type", None)
+    if content_type:
+        hdrs.setdefault("Content-Type", content_type)
+    if isinstance(response, StreamingResponse):
+        hdrs.setdefault("Transfer-Encoding", "chunked")
+        if str(content_type or hdrs.get("Content-Type", "")).startswith(
+            "text/event-stream"
+        ):
+            hdrs.setdefault("Cache-Control", "no-cache")
+    hdrs.setdefault("Date", formatdate(usegmt=True))
+    hdrs.setdefault("Connection", "close")
+    path = getattr(request, "path", "")
+    if not path.startswith("/admin/"):
+        hdrs["Access-Control-Allow-Origin"] = "*"
+        hdrs["Access-Control-Allow-Methods"] = "*"
+        hdrs["Access-Control-Allow-Headers"] = "*"
+    return hdrs
+
+
+def _capture_client_response_detail(response: Any, request: Any) -> None:
+    """Attach wire-format client response metadata to the request detail snapshot."""
+    from .admin.request_log import request_detail_var
+
+    detail = request_detail_var.get()
+    if detail is None:
+        return
+    detail["response_headers"] = _outbound_response_headers(response, request)
+    detail["response_status_code"] = getattr(response, "status_code", None)
+    request_detail_var.set(detail)
 
 
 def _record_telemetry(
@@ -78,8 +119,12 @@ def _record_telemetry(
                 error_detail=error_detail,
                 api_key_label=api_key_label_var.get(),
                 client_ip=_extract_client_ip(request),
+                request_path=getattr(request, "path", None),
+                request_method=getattr(request, "method", None),
                 request_body=detail.get("request_body") if detail else None,
                 request_headers=detail.get("request_headers") if detail else None,
+                response_body=detail.get("response_body") if detail else None,
+                response_headers=detail.get("response_headers") if detail else None,
                 upstream_request_body=detail.get("upstream_request_body")
                 if detail
                 else None,
@@ -92,6 +137,7 @@ def _record_telemetry(
                 upstream_response_headers=detail.get("upstream_response_headers")
                 if detail
                 else None,
+                upstream_url=detail.get("upstream_url") if detail else None,
             )
         )
         # Clear the context var after use
@@ -112,6 +158,8 @@ def _record_telemetry(
                 "error_detail": error_detail,
                 "api_key_label": api_key_label_var.get(),
                 "client_ip": _extract_client_ip(request),
+                "request_path": getattr(request, "path", None),
+                "request_method": getattr(request, "method", None),
             }
         )
 
@@ -198,6 +246,7 @@ async def _proxy_handler(
     # Model alias: replace the model name in the request body with the
     # actual upstream identifier so the converter and upstream provider
     # both see the correct name.
+    client_request_body = copy.deepcopy(body)
     if upstream_model:
         body["model"] = upstream_model
 
@@ -231,6 +280,7 @@ async def _proxy_handler(
     t0 = time.monotonic()
     status_code = 500
     error_detail: str | None = None
+    response: Response | StreamingResponse | None = None
 
     try:
         handler = handle_streaming if is_stream else handle_non_streaming
@@ -251,6 +301,7 @@ async def _proxy_handler(
             reasoning_config_override=reasoning_override,
             model_capabilities=model_caps,
             request_headers=request_headers,
+            client_request_body=client_request_body,
         )
         status_code = response.status_code
         if status_code >= 400 and hasattr(response, "body"):
@@ -264,12 +315,14 @@ async def _proxy_handler(
         error_detail = str(exc)
         logger.exception("[%s] unhandled error in proxy handler", request_id)
         status_code = 500
-        resp = error_response_for_source(
+        response = error_response_for_source(
             source_provider, 500, f"Internal server error: {exc}"
         )
-        resp.headers["x-request-id"] = request_id
-        return resp
+        response.headers["x-request-id"] = request_id
+        return response
     finally:
+        if response is not None:
+            _capture_client_response_detail(response, request)
         _record_telemetry(
             request,
             model=model,

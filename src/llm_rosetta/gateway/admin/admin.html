@@ -546,6 +546,119 @@ body { padding-bottom: 26px; }
 /* Copy button feedback */
 .btn.copied { background: var(--green); border-color: var(--green); color: #fff; }
 
+/* Detail payload panels (collapsible) */
+.detail-payload {
+  margin-bottom: 12px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-card); overflow: hidden;
+}
+.detail-payload summary {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  cursor: pointer; user-select: none; list-style: none; font-size: 13px;
+}
+.detail-payload summary::-webkit-details-marker { display: none; }
+.detail-payload summary::before {
+  content: '\25B6'; display: inline-block; font-size: 9px; color: var(--text-dim);
+  transition: transform 0.15s; flex-shrink: 0;
+}
+.detail-payload[open] summary::before { transform: rotate(90deg); }
+.detail-payload summary .payload-title { font-weight: 600; flex: 1; min-width: 0; }
+.detail-payload summary .payload-meta {
+  font-size: 11px; color: var(--text-dim); font-family: var(--mono); white-space: nowrap;
+}
+.detail-payload .payload-body { padding: 0 14px 14px; border-top: 1px solid var(--border); }
+.detail-payload .payload-toolbar {
+  display: flex; gap: 8px; padding: 10px 0 8px; flex-wrap: wrap;
+}
+.detail-payload .section-badge {
+  font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--bg);
+  color: var(--text-dim); border: 1px solid var(--border); font-family: var(--mono);
+}
+.detail-curl-block .curl-pre { color: var(--green); }
+
+.detail-hop {
+  margin-bottom: 16px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-card); overflow: hidden;
+}
+.detail-hop > summary {
+  display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+  cursor: pointer; user-select: none; list-style: none;
+}
+.detail-hop > summary::-webkit-details-marker { display: none; }
+.detail-hop > summary::before {
+  content: '\25B6'; font-size: 10px; color: var(--accent); transition: transform 0.15s;
+}
+.detail-hop[open] > summary::before { transform: rotate(90deg); }
+.detail-hop .hop-title { font-size: 14px; font-weight: 700; }
+.detail-hop .hop-body { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+
+.detail-leg {
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg);
+  overflow: hidden;
+}
+.detail-leg > summary {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  cursor: pointer; user-select: none; list-style: none; font-size: 13px; font-weight: 600;
+}
+.detail-leg > summary::-webkit-details-marker { display: none; }
+.detail-leg > summary::before {
+  content: '\25B6'; font-size: 9px; color: var(--text-dim); transition: transform 0.15s;
+}
+.detail-leg[open] > summary::before { transform: rotate(90deg); }
+.detail-leg .leg-body { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+
+.detail-part { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); overflow: hidden; }
+.detail-part > summary {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  cursor: pointer; user-select: none; list-style: none; font-size: 12px;
+}
+.detail-part > summary::-webkit-details-marker { display: none; }
+.detail-part > summary::before {
+  content: '\25B6'; font-size: 8px; color: var(--text-dim); transition: transform 0.15s;
+}
+.detail-part[open] > summary::before { transform: rotate(90deg); }
+.detail-empty-note {
+  font-size: 12px; color: var(--text-dim); font-style: italic; padding: 8px 10px;
+  border: 1px dashed var(--border); border-radius: var(--radius);
+}
+
+.payload-pre {
+  margin: 0; padding: 12px; font-family: var(--mono); font-size: 11px; line-height: 1.55;
+  max-height: min(42vh, 420px); overflow: auto; white-space: pre-wrap; word-break: break-word;
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+  tab-size: 2;
+}
+
+.header-list { font-family: var(--mono); font-size: 11px; line-height: 1.6; }
+.header-row {
+  display: grid; grid-template-columns: minmax(120px, 28%) 1fr; gap: 8px 12px;
+  padding: 4px 0; border-bottom: 1px solid var(--border);
+}
+.header-row:last-child { border-bottom: none; }
+.header-key { color: var(--blue); word-break: break-word; }
+.header-val { color: var(--text); word-break: break-all; }
+
+.json-tree {
+  font-family: var(--mono); font-size: 11px; line-height: 1.55;
+  max-height: min(42vh, 420px); overflow: auto;
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px;
+}
+.json-node.collapsed > .json-children { display: none; }
+.json-node > .json-toggle {
+  display: inline-flex; align-items: center; gap: 5px; cursor: pointer; user-select: none;
+  color: var(--text-dim); font-size: 10px; margin-bottom: 2px;
+}
+.json-node > .json-toggle::before {
+  content: '▶'; font-size: 8px; transition: transform 0.12s; color: var(--accent);
+}
+.json-node.expanded > .json-toggle::before { transform: rotate(90deg); }
+.json-line { margin-left: 14px; word-break: break-word; }
+.json-string-truncated .json-more {
+  font-size: 10px; color: var(--accent); cursor: pointer; border: none; background: none;
+  padding: 0 4px; text-decoration: underline; margin-left: 4px;
+}
+.json-string-truncated .json-more:hover { color: var(--accent-hover); }
+
 </style>
 </head>
 <body class="auth-pending">
@@ -1000,6 +1113,8 @@ body { padding-bottom: 26px; }
       </div>
     </div>
     <div class="modal-actions">
+      <button class="btn" onclick="copyDetailCurl('client')" data-i18n="detail.copyClientCurl">Copy client cURL</button>
+      <button class="btn" onclick="copyDetailCurl('server')" data-i18n="detail.copyServerCurl">Copy server cURL</button>
       <button class="btn btn-primary" onclick="copyDetailJson()" data-i18n="detail.copyJson">Copy JSON</button>
       <button class="btn" onclick="closeModal('logDetailModal')" data-i18n="btn.close">Close</button>
     </div>
@@ -1170,22 +1285,30 @@ const I18N = {
     'detail.duration':'Duration',
     'detail.error':'Error',
     'detail.stream':'Stream',
-    'detail.downstream':'Downstream Request',
+    'detail.client':'Client',
+    'detail.server':'Server',
+    'detail.hopClientGateway':'Client ↔ Gateway',
+    'detail.hopGatewayServer':'Gateway ↔ Server',
+    'detail.clientRequest':'Client → Gateway',
+    'detail.gatewayResponse':'Gateway → Client',
+    'detail.gatewayRequest':'Gateway → Server',
+    'detail.serverResponse':'Server → Gateway',
+    'detail.reqHeaders':'Request Headers',
+    'detail.reqBody':'Request Body',
+    'detail.resHeaders':'Response Headers',
+    'detail.resBody':'Response Body',
+    'detail.curlCommand':'cURL Command',
+    'detail.copyClientCurl':'Copy client cURL',
+    'detail.copyServerCurl':'Copy server cURL',
+    'detail.streamBodyNote':'Streaming response — response body not fully captured',
+    'detail.serverCurlUnavailable':'Server URL not recorded for this entry',
+    'detail.noData':'No data recorded',
     'detail.gateway':'Gateway',
-    'detail.upstream':'Upstream Request',
-    'detail.requestBody':'Request Body (Downstream → Gateway)',
-    'detail.requestHeaders':'Request Headers (Downstream → Gateway)',
-    'detail.upstreamRequestBody':'Request Body (Gateway → Upstream)',
-    'detail.upstreamRequestHeaders':'Request Headers (Gateway → Upstream)',
-    'detail.upstreamResponseBody':'Response Body (Upstream → Gateway)',
-    'detail.upstreamResponseHeaders':'Response Headers (Upstream → Gateway)',
-    'detail.downstreamRequest':'Downstream → Gateway',
-    'detail.upstreamRequest':'Gateway → Upstream',
-    'detail.upstreamResponse':'Upstream → Gateway',
     'detail.headers':'Headers',
     'detail.copy':'Copy',
     'detail.copied':'Copied',
     'detail.copyJson':'Copy All as JSON',
+    'detail.expand':'Expand',
     'detail.viewDetails':'View Details',
   },
   zh: {
@@ -1313,22 +1436,30 @@ const I18N = {
     'detail.duration':'\u8017\u65f6',
     'detail.error':'\u9519\u8bef',
     'detail.stream':'\u6d41\u5f0f',
-    'detail.downstream':'\u4e0b\u6e38\u8bf7\u6c42',
+    'detail.client':'\u5ba2\u6237\u7aef',
+    'detail.server':'\u670d\u52a1\u7aef',
     'detail.gateway':'\u7f51\u5173',
-    'detail.upstream':'\u4e0a\u6e38\u8bf7\u6c42',
-    'detail.requestBody':'\u8bf7\u6c42\u5185\u5bb9 (\u4e0b\u6e38 \u2192 \u7f51\u5173)',
-    'detail.requestHeaders':'\u8bf7\u6c42\u5934 (\u4e0b\u6e38 \u2192 \u7f51\u5173)',
-    'detail.upstreamRequestBody':'\u8bf7\u6c42\u5185\u5bb9 (\u7f51\u5173 \u2192 \u4e0a\u6e38)',
-    'detail.upstreamRequestHeaders':'\u8bf7\u6c42\u5934 (\u7f51\u5173 \u2192 \u4e0a\u6e38)',
-    'detail.upstreamResponseBody':'\u54cd\u5e94\u5185\u5bb9 (\u4e0a\u6e38 \u2192 \u7f51\u5173)',
-    'detail.upstreamResponseHeaders':'\u54cd\u5e94\u5934 (\u4e0a\u6e38 \u2192 \u7f51\u5173)',
-    'detail.downstreamRequest':'\u4e0b\u6e38 \u2192 \u7f51\u5173',
-    'detail.upstreamRequest':'\u7f51\u5173 \u2192 \u4e0a\u6e38',
-    'detail.upstreamResponse':'\u4e0a\u6e38 \u2192 \u7f51\u5173',
+    'detail.hopClientGateway':'\u5ba2\u6237\u7aef \u2194 \u7f51\u5173',
+    'detail.hopGatewayServer':'\u7f51\u5173 \u2194 \u670d\u52a1\u7aef',
+    'detail.clientRequest':'\u5ba2\u6237\u7aef \u2192 \u7f51\u5173',
+    'detail.gatewayResponse':'\u7f51\u5173 \u2192 \u5ba2\u6237\u7aef',
+    'detail.gatewayRequest':'\u7f51\u5173 \u2192 \u670d\u52a1\u7aef',
+    'detail.serverResponse':'\u670d\u52a1\u7aef \u2192 \u7f51\u5173',
+    'detail.reqHeaders':'\u8bf7\u6c42\u5934',
+    'detail.reqBody':'\u8bf7\u6c42\u4f53',
+    'detail.resHeaders':'\u54cd\u5e94\u5934',
+    'detail.resBody':'\u54cd\u5e94\u4f53',
+    'detail.curlCommand':'cURL \u547d\u4ee4',
+    'detail.copyClientCurl':'\u590d\u5236\u5ba2\u6237\u7aef cURL',
+    'detail.copyServerCurl':'\u590d\u5236\u670d\u52a1\u7aef cURL',
+    'detail.streamBodyNote':'\u6d41\u5f0f\u54cd\u5e94\uff0c\u672a\u5b8c\u6574\u8bb0\u5f55\u54cd\u5e94\u4f53',
+    'detail.serverCurlUnavailable':'\u6b64\u6761\u76ee\u672a\u8bb0\u5f55\u670d\u52a1\u7aef URL',
+    'detail.noData':'\u65e0\u8bb0\u5f55\u6570\u636e',
     'detail.headers':'\u5934\u4fe1\u606f',
     'detail.copy':'\u590d\u5236',
     'detail.copied':'\u5df2\u590d\u5236',
     'detail.copyJson':'\u590d\u5236\u5168\u90e8 JSON',
+    'detail.expand':'\u5c55\u5f00',
     'detail.viewDetails':'\u67e5\u770b\u8be6\u60c5',
   },
 };
@@ -2838,9 +2969,152 @@ function changePage(dir) {
 }
 
 // ===================== Log Detail View =====================
+const detailPayloadStore = new Map();
+let detailPayloadSeq = 0;
+let currentLogDetail = null;
+const JSON_STRING_PREVIEW = 160;
+const JSON_PRE_THRESHOLD = 6000;
+
+function clearDetailPayloads() {
+  detailPayloadStore.clear();
+  detailPayloadSeq = 0;
+}
+
+function stashPayload(value) {
+  const id = 'dp-' + (++detailPayloadSeq);
+  detailPayloadStore.set(id, value);
+  return id;
+}
+
+function formatPayloadSize(value) {
+  try {
+    const bytes = new Blob([JSON.stringify(value)]).size;
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  } catch (_) {
+    return '—';
+  }
+}
+
+function formatPayloadSummary(value, isHeaders) {
+  if (value === null || value === undefined) return '—';
+  if (isHeaders && typeof value === 'object' && !Array.isArray(value)) {
+    const n = Object.keys(value).length;
+    return n + ' header' + (n === 1 ? '' : 's');
+  }
+  if (Array.isArray(value)) {
+    return value.length + ' item' + (value.length === 1 ? '' : 's') + ' · ' + formatPayloadSize(value);
+  }
+  if (typeof value === 'object') {
+    const n = Object.keys(value).length;
+    return n + ' field' + (n === 1 ? '' : 's') + ' · ' + formatPayloadSize(value);
+  }
+  return formatPayloadSize(value);
+}
+
+function shellQuote(str) {
+  return "'" + String(str).replace(/'/g, "'\\''") + "'";
+}
+
+function shellDoubleQuote(str) {
+  return '"' + String(str).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$') + '"';
+}
+
+const CURL_SKIP_HEADERS = new Set([
+  'host', 'content-length', 'connection', 'accept-encoding',
+  'transfer-encoding', 'upgrade', 'te', 'trailer',
+]);
+const CURL_CLIENT_SKIP_HEADERS = new Set([
+  ...CURL_SKIP_HEADERS, 'user-agent', 'accept',
+]);
+const CURL_HEADER_PRIORITY = [
+  'content-type', 'authorization', 'x-api-key', 'anthropic-version',
+  'openai-beta', 'openresponses-version', 'x-request-id', 'x-goog-api-key',
+];
+
+function sortedCurlHeaderKeys(headers) {
+  return Object.keys(headers).sort((a, b) => {
+    const ai = CURL_HEADER_PRIORITY.indexOf(a.toLowerCase());
+    const bi = CURL_HEADER_PRIORITY.indexOf(b.toLowerCase());
+    const ap = ai === -1 ? 999 : ai;
+    const bp = bi === -1 ? 999 : bi;
+    if (ap !== bp) return ap - bp;
+    return a.toLowerCase().localeCompare(b.toLowerCase());
+  });
+}
+
+function formatCurlBody(body) {
+  if (body == null) return null;
+  if (typeof body === 'string') return body;
+  try {
+    return JSON.stringify(body, null, 2);
+  } catch (_) {
+    return String(body);
+  }
+}
+
+function formatCurl({url, headers, body, isStream, skipHeaders}) {
+  if (!url) return '';
+  const skip = skipHeaders || CURL_SKIP_HEADERS;
+  const lines = ['curl ' + shellDoubleQuote(url)];
+  const hdrs = headers || {};
+  for (const key of sortedCurlHeaderKeys(hdrs)) {
+    if (skip.has(key.toLowerCase())) continue;
+    lines.push('  -H ' + shellDoubleQuote(key + ': ' + hdrs[key]));
+  }
+  const bodyStr = formatCurlBody(body);
+  if (bodyStr != null) {
+    if (!Object.keys(hdrs).some(k => k.toLowerCase() === 'content-type')) {
+      lines.push('  -H ' + shellDoubleQuote('Content-Type: application/json'));
+    }
+    lines.push('  -d ' + shellDoubleQuote(bodyStr));
+  }
+  if (isStream) lines.push('  -N');
+  return lines.join(' \\\n');
+}
+
+function inferRequestPath(data) {
+  if (data.request_path) return data.request_path;
+  const sp = data.source_provider;
+  if (sp === 'anthropic') return '/v1/messages';
+  if (sp === 'openai_responses') return '/v1/responses';
+  if (sp === 'google') {
+    const model = (data.model || 'gemini-pro').replace(/^models\//, '');
+    const action = data.is_stream ? 'streamGenerateContent' : 'generateContent';
+    return '/v1beta/models/' + model + ':' + action;
+  }
+  const body = data.request_body;
+  if (body && 'input' in body && !('messages' in body)) return '/v1/embeddings';
+  return '/v1/chat/completions';
+}
+
+function buildClientCurl(data) {
+  const path = inferRequestPath(data);
+  return formatCurl({
+    url: window.location.origin + path,
+    headers: data.request_headers || {},
+    body: data.request_body,
+    isStream: data.is_stream,
+    skipHeaders: CURL_CLIENT_SKIP_HEADERS,
+  });
+}
+
+function buildServerCurl(data) {
+  if (!data.upstream_url) return null;
+  return formatCurl({
+    url: data.upstream_url,
+    headers: data.upstream_request_headers || {},
+    body: data.upstream_request_body,
+    isStream: data.is_stream,
+  });
+}
+
 function openLogDetail(id) {
   const modal = document.getElementById('logDetailModal');
   const body = document.getElementById('logDetailBody');
+  currentLogDetail = null;
+  clearDetailPayloads();
   modal.classList.add('open');
   body.innerHTML = `
     <div class="detail-loading">
@@ -2848,7 +3122,7 @@ function openLogDetail(id) {
       <span data-i18n="detail.loading">${t('detail.loading')}</span>
     </div>
   `;
-  api.get(`/admin/api/requests/${encodeURIComponent(id)}`).then(data => {
+  api.get('/admin/api/requests/' + encodeURIComponent(id)).then(data => {
     renderLogDetail(data);
   }).catch(err => {
     body.innerHTML = `
@@ -2859,11 +3133,77 @@ function openLogDetail(id) {
   });
 }
 
+function renderPayloadPart(titleKey, value, {isHeaders = false} = {}) {
+  if (value === undefined || value === null) return '';
+  const payloadId = stashPayload(value);
+  return `
+    <details class="detail-part">
+      <summary>
+        <span class="payload-title">${t(titleKey)}</span>
+        <span class="payload-meta">${formatPayloadSummary(value, isHeaders)}</span>
+      </summary>
+      <div class="payload-body">
+        <div class="payload-toolbar">
+          <button type="button" class="btn btn-sm btn-copy-payload" data-payload-id="${payloadId}">${t('detail.copy')}</button>
+        </div>
+        ${renderPayloadView(value, isHeaders)}
+      </div>
+    </details>
+  `;
+}
+
+function renderCurlPart(curlText) {
+  if (!curlText) return '';
+  const payloadId = stashPayload(curlText);
+  return `
+    <details class="detail-part detail-curl-block">
+      <summary>
+        <span class="payload-title">${t('detail.curlCommand')}</span>
+      </summary>
+      <div class="payload-body">
+        <div class="payload-toolbar">
+          <button type="button" class="btn btn-sm btn-copy-payload" data-payload-id="${payloadId}">${t('detail.copy')}</button>
+        </div>
+        <pre class="payload-pre curl-pre">${esc(curlText)}</pre>
+      </div>
+    </details>
+  `;
+}
+
+function renderLeg(titleKey, innerHtml, meta) {
+  const trimmed = innerHtml.trim();
+  const metaHtml = meta ? `<span class="payload-meta">${esc(meta)}</span>` : '';
+  if (!trimmed) {
+    return `
+      <details class="detail-leg">
+        <summary><span class="payload-title">${t(titleKey)}</span>${metaHtml}</summary>
+        <div class="leg-body"><p class="detail-empty-note">${t('detail.noData')}</p></div>
+      </details>
+    `;
+  }
+  return `
+    <details class="detail-leg">
+      <summary><span class="payload-title">${t(titleKey)}</span>${metaHtml}</summary>
+      <div class="leg-body">${innerHtml}</div>
+    </details>
+  `;
+}
+
+function renderHopGroup(titleKey, legsHtml) {
+  return `
+    <details class="detail-hop">
+      <summary><span class="hop-title">${t(titleKey)}</span></summary>
+      <div class="hop-body">${legsHtml}</div>
+    </details>
+  `;
+}
+
 function renderLogDetail(data) {
+  currentLogDetail = data;
   const body = document.getElementById('logDetailBody');
   const time = new Date(data.timestamp).toLocaleString(undefined, {month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'});
   const statusCls = data.status_code < 400 ? 'badge-ok' : 'badge-error';
-  const modeBadge = data.is_stream ? '<span class="badge badge-stream" data-i18n="detail.stream">stream</span>' : '';
+  const modeBadge = data.is_stream ? '<span class="badge badge-stream">' + t('detail.stream') + '</span>' : '';
   const keyLabel = data.api_key_label || '—';
   const clientIp = data.client_ip || '—';
   const sourceProvider = data.source_provider;
@@ -2872,134 +3212,210 @@ function renderLogDetail(data) {
   let html = `
     <div class="detail-section">
       <div class="section-header">
-        <h4 data-i18n="detail.overview">Overview</h4>
+        <h4>${t('detail.overview')}</h4>
       </div>
       <div class="flow-diagram">
-        <div class="flow-step"><span class="step-label" data-i18n="detail.downstream">Downstream</span></div>
+        <div class="flow-step"><span class="step-label">${t('detail.client')}</span></div>
         <span class="flow-arrow">→</span>
-        <div class="flow-step"><span class="step-label" data-i18n="detail.gateway">Gateway</span></div>
+        <div class="flow-step"><span class="step-label">${t('detail.gateway')}</span></div>
         <span class="flow-arrow">→</span>
-        <div class="flow-step"><span class="step-label" data-i18n="detail.upstream">Upstream</span></div>
+        <div class="flow-step"><span class="step-label">${t('detail.server')}</span></div>
       </div>
       <div style="margin-top:12px; display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
-        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.time">Time</div><div>${time}</div></div>
-        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.model">Model</div><div><code>${esc(data.model)}</code></div></div>
-        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.sourceProvider">Source</div><div>${esc(sourceProvider)}</div></div>
-        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.targetProvider">Target</div><div>${esc(targetProvider)}</div></div>
-        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.mode">Mode</div><div>${modeBadge}</div></div>
-        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.apiKey">API Key</div><div style="font-size:12px;color:var(--text-dim)">${esc(keyLabel)}</div></div>
-        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.clientIp">Client IP</div><div style="font-size:12px;color:var(--text-dim)">${esc(clientIp)}</div></div>
-        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.status">Status</div><div><span class="badge ${statusCls}">${data.status_code}</span></div></div>
-        <div><div style="color:var(--text-dim);font-size:11px" data-i18n="detail.duration">Duration</div><div>${data.duration_ms.toFixed(0)} ms</div></div>
-        ${data.error_detail ? `<div class="detail-section" style="margin-top:12px"><h4 data-i18n="detail.error">Error</h4><pre style="margin:0;padding:8px;background:var(--bg);border-radius:6px;font-size:11px;max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-all;color:var(--red)">${esc(data.error_detail)}</pre></div>` : ''}
+        <div><div style="color:var(--text-dim);font-size:11px">${t('detail.time')}</div><div>${time}</div></div>
+        <div><div style="color:var(--text-dim);font-size:11px">${t('detail.model')}</div><div><code>${esc(data.model)}</code></div></div>
+        <div><div style="color:var(--text-dim);font-size:11px">${t('detail.sourceProvider')}</div><div>${esc(sourceProvider)}</div></div>
+        <div><div style="color:var(--text-dim);font-size:11px">${t('detail.targetProvider')}</div><div>${esc(targetProvider)}</div></div>
+        <div><div style="color:var(--text-dim);font-size:11px">${t('detail.mode')}</div><div>${modeBadge}</div></div>
+        <div><div style="color:var(--text-dim);font-size:11px">${t('detail.apiKey')}</div><div style="font-size:12px;color:var(--text-dim)">${esc(keyLabel)}</div></div>
+        <div><div style="color:var(--text-dim);font-size:11px">${t('detail.clientIp')}</div><div style="font-size:12px;color:var(--text-dim)">${esc(clientIp)}</div></div>
+        <div><div style="color:var(--text-dim);font-size:11px">${t('detail.status')}</div><div><span class="badge ${statusCls}">${data.status_code}</span></div></div>
+        <div><div style="color:var(--text-dim);font-size:11px">${t('detail.duration')}</div><div>${data.duration_ms.toFixed(0)} ms</div></div>
+        ${data.error_detail ? `<div class="detail-section" style="margin-top:12px;grid-column:1/-1"><h4>${t('detail.error')}</h4><pre class="payload-pre">${esc(data.error_detail)}</pre></div>` : ''}
       </div>
     </div>
   `;
 
-  // Request/Response sections
-  const sections = [
-    { key: 'request_body', title: 'detail.requestBody', badge: 'detail.downstreamRequest' },
-    { key: 'request_headers', title: 'detail.requestHeaders', badge: 'detail.headers' },
-    { key: 'upstream_request_body', title: 'detail.upstreamRequestBody', badge: 'detail.upstreamRequest' },
-    { key: 'upstream_request_headers', title: 'detail.upstreamRequestHeaders', badge: 'detail.headers' },
-    { key: 'upstream_response_body', title: 'detail.upstreamResponseBody', badge: 'detail.upstreamResponse' },
-    { key: 'upstream_response_headers', title: 'detail.upstreamResponseHeaders', badge: 'detail.headers' },
-  ];
+  const clientRequestParts = [
+    renderPayloadPart('detail.reqHeaders', data.request_headers, {isHeaders: true}),
+    renderPayloadPart('detail.reqBody', data.request_body),
+    renderCurlPart(buildClientCurl(data)),
+  ].join('');
 
-  for (const sec of sections) {
-    const value = data[sec.key];
-    if (value !== undefined && value !== null) {
-      const isHeaders = sec.key.includes('headers');
-      html += `
-        <div class="detail-section">
-          <div class="section-header">
-            <h4 data-i18n="${sec.title}">${t(sec.title)}</h4>
-            <span class="section-badge" data-i18n="${sec.badge}">${t(sec.badge)}</span>
-          </div>
-          <div class="json-viewer" data-json='${esc(JSON.stringify(value))}'></div>
-        </div>
-      `;
-    }
+  let gatewayResponseParts = [
+    renderPayloadPart('detail.resHeaders', data.response_headers, {isHeaders: true}),
+  ].join('');
+  if (data.is_stream && !data.response_body) {
+    gatewayResponseParts += `<p class="detail-empty-note">${t('detail.streamBodyNote')}</p>`;
+  } else {
+    gatewayResponseParts += renderPayloadPart('detail.resBody', data.response_body);
   }
 
+  html += renderHopGroup('detail.hopClientGateway',
+    renderLeg('detail.clientRequest', clientRequestParts)
+    + renderLeg('detail.gatewayResponse', gatewayResponseParts,
+        'HTTP ' + (data.response_status_code || data.status_code || '—'))
+  );
+
+  const serverRequestParts = [
+    renderPayloadPart('detail.reqHeaders', data.upstream_request_headers, {isHeaders: true}),
+    renderPayloadPart('detail.reqBody', data.upstream_request_body),
+    data.upstream_url ? renderCurlPart(buildServerCurl(data)) : '',
+  ].join('');
+
+  const serverResponseParts = [
+    renderPayloadPart('detail.resHeaders', data.upstream_response_headers, {isHeaders: true}),
+    renderPayloadPart('detail.resBody', data.upstream_response_body),
+  ].join('');
+
+  html += renderHopGroup('detail.hopGatewayServer',
+    renderLeg('detail.gatewayRequest', serverRequestParts)
+    + renderLeg('detail.serverResponse', serverResponseParts)
+  );
+
   body.innerHTML = html;
-  // Initialize JSON viewers
-  document.querySelectorAll('.json-viewer[data-json]').forEach(el => {
-    try {
-      const json = JSON.parse(el.dataset.json);
-      el.innerHTML = renderJsonViewer(json);
-      // Add copy button
-      const actions = document.createElement('div');
-      actions.className = 'json-viewer-actions';
-      actions.innerHTML = `<button class="btn btn-sm" onclick="copyJsonToClipboard(this, ${esc(JSON.stringify(json))})" data-i18n="detail.copy">${t('detail.copy')}</button>`;
-      el.insertBefore(actions, el.firstChild);
-    } catch(e) {
-      el.textContent = String(el.dataset.json);
+  wirePayloadInteractions(body);
+}
+
+function renderPayloadView(value, isHeaders) {
+  if (isHeaders && typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    return renderHeaderList(value);
+  }
+  let jsonStr;
+  try { jsonStr = JSON.stringify(value, null, 2); } catch (_) { jsonStr = String(value); }
+  if (jsonStr.length > JSON_PRE_THRESHOLD) {
+    return '<pre class="payload-pre">' + esc(jsonStr) + '</pre>';
+  }
+  return '<div class="json-tree">' + renderJsonTree(value) + '</div>';
+}
+
+function renderHeaderList(headers) {
+  const rows = Object.keys(headers).sort().map(key => `
+    <div class="header-row">
+      <span class="header-key">${esc(key)}</span>
+      <span class="header-val">${esc(String(headers[key]))}</span>
+    </div>
+  `).join('');
+  return '<div class="header-list">' + rows + '</div>';
+}
+
+function renderJsonTree(val, depth = 0) {
+  if (val === null) return '<span class="json-null">null</span>';
+  if (val === undefined) return '<span class="json-null">undefined</span>';
+  const type = typeof val;
+  if (type === 'string') {
+    if (val.length > JSON_STRING_PREVIEW) {
+      return '<span class="json-string-truncated">'
+        + '<span class="str-preview"><span class="json-string">"' + esc(val.slice(0, JSON_STRING_PREVIEW)) + '…"</span></span>'
+        + '<button type="button" class="json-more" data-action="expand-str">' + t('detail.expand') + ' (' + val.length + ')</button>'
+        + '<span class="str-full" hidden><span class="json-string">"' + esc(val) + '"</span></span>'
+        + '</span>';
+    }
+    return '<span class="json-string">"' + esc(val) + '"</span>';
+  }
+  if (type === 'number') return '<span class="json-number">' + val + '</span>';
+  if (type === 'boolean') return '<span class="json-boolean">' + val + '</span>';
+  if (Array.isArray(val)) {
+    if (val.length === 0) return '<span class="json-bracket">[]</span>';
+    const collapsed = depth >= 1;
+    const cls = collapsed ? 'json-node collapsed' : 'json-node expanded';
+    const items = val.map((item, i) =>
+      '<div class="json-line">' + renderJsonTree(item, depth + 1) + (i < val.length - 1 ? '<span class="json-comma">,</span>' : '') + '</div>'
+    ).join('');
+    return '<div class="' + cls + '">'
+      + '<span class="json-toggle" data-action="toggle">Array[' + val.length + ']</span>'
+      + '<div class="json-children"><span class="json-bracket">[</span>' + items + '<span class="json-bracket">]</span></div>'
+      + '</div>';
+  }
+  if (type === 'object') {
+    const keys = Object.keys(val);
+    if (keys.length === 0) return '<span class="json-brace">{}</span>';
+    const collapsed = depth >= 1;
+    const cls = collapsed ? 'json-node collapsed' : 'json-node expanded';
+    const items = keys.map((k, i) =>
+      '<div class="json-line"><span class="json-key">"' + esc(k) + '"</span><span class="json-colon">: </span>'
+      + renderJsonTree(val[k], depth + 1) + (i < keys.length - 1 ? '<span class="json-comma">,</span>' : '') + '</div>'
+    ).join('');
+    return '<div class="' + cls + '">'
+      + '<span class="json-toggle" data-action="toggle">{' + keys.length + ' keys}</span>'
+      + '<div class="json-children"><span class="json-brace">{</span>' + items + '<span class="json-brace">}</span></div>'
+      + '</div>';
+  }
+  return esc(String(val));
+}
+
+function wirePayloadInteractions(container) {
+  if (container._payloadClickWired) return;
+  container._payloadClickWired = true;
+  container.addEventListener('click', (e) => {
+    const actionEl = e.target.closest('[data-action]');
+    if (actionEl) {
+      const action = actionEl.dataset.action;
+      if (action === 'toggle') {
+        const node = actionEl.closest('.json-node');
+        if (node) {
+          node.classList.toggle('collapsed');
+          node.classList.toggle('expanded');
+        }
+      } else if (action === 'expand-str') {
+        const wrap = actionEl.closest('.json-string-truncated');
+        if (wrap) {
+          const preview = wrap.querySelector('.str-preview');
+          const full = wrap.querySelector('.str-full');
+          if (preview) preview.hidden = true;
+          actionEl.hidden = true;
+          if (full) full.hidden = false;
+        }
+      }
+      return;
+    }
+    const copyBtn = e.target.closest('.btn-copy-payload');
+    if (copyBtn) {
+      const payload = detailPayloadStore.get(copyBtn.dataset.payloadId);
+      if (payload !== undefined) {
+        if (typeof payload === 'string') {
+          copyText(payload, t('detail.copied'));
+          flashCopiedButton(copyBtn);
+        } else {
+          copyJsonToClipboard(copyBtn, payload);
+        }
+      }
     }
   });
 }
 
-function renderJsonViewer(obj, depth = 0) {
-  if (obj === null) return '<span class="json-null">null</span>';
-  if (obj === undefined) return '<span class="json-null">undefined</span>';
-  const type = typeof obj;
-  if (type === 'string') return `<span class="json-string">"${esc(obj)}"</span>`;
-  if (type === 'number') return `<span class="json-number">${obj}</span>`;
-  if (type === 'boolean') return `<span class="json-boolean">${obj}</span>`;
-  if (Array.isArray(obj)) {
-    if (obj.length === 0) return '<span class="json-bracket">[]</span>';
-    const items = obj.map((v, i) => `
-      <div style="margin-left:${(depth+1)*16}px">
-        <span class="json-bracket">[</span>
-        ${renderJsonViewer(v, depth+1)}
-        <span class="json-bracket">${i === obj.length-1 ? ']' : '],'}</span>
-      </div>
-    `).join('');
-    return `<span class="json-bracket">[</span>${items}<span class="json-bracket">]</span>`;
-  }
-  if (type === 'object') {
-    const keys = Object.keys(obj);
-    if (keys.length === 0) return '<span class="json-brace">{}</span>';
-    const items = keys.map((k, i) => `
-      <div class="expandable" style="margin-left:${(depth+1)*16}px">
-        <span class="json-key">"${esc(k)}"</span>
-        <span class="json-colon">:</span>
-        ${renderJsonViewer(obj[k], depth+1)}
-        <span class="json-comma">${i === keys.length-1 ? '' : ','}</span>
-      </div>
-    `).join('');
-    return `<span class="json-brace">{</span>${items}<span class="json-brace">}</span>`;
-  }
-  return String(obj);
+function flashCopiedButton(btn) {
+  const orig = btn.textContent;
+  btn.classList.add('copied');
+  btn.textContent = t('detail.copied');
+  setTimeout(() => {
+    btn.classList.remove('copied');
+    btn.textContent = orig;
+  }, 1500);
 }
 
 function copyJsonToClipboard(btn, json) {
-  navigator.clipboard.writeText(JSON.stringify(json, null, 2)).then(() => {
-    btn.classList.add('copied');
-    btn.textContent = t('detail.copied');
-    setTimeout(() => {
-      btn.classList.remove('copied');
-      btn.textContent = t('detail.copy');
-    }, 1500);
-  }).catch(() => {
-    showToast('Copy failed', 'error');
+  const text = typeof json === 'string' ? json : JSON.stringify(json, null, 2);
+  copyText(text, t('detail.copied')).then(() => {
+    if (btn) flashCopiedButton(btn);
   });
 }
 
 function copyDetailJson() {
-  const viewers = document.querySelectorAll('#logDetailBody .json-viewer[data-json]');
-  const combined = {};
-  viewers.forEach(v => {
-    try {
-      const key = v.closest('.detail-section').querySelector('h4').textContent;
-      combined[key] = JSON.parse(v.dataset.json);
-    } catch(e) {}
-  });
-  navigator.clipboard.writeText(JSON.stringify(combined, null, 2)).then(() => {
-    showToast(t('toast.copied'));
-  }).catch(() => {
-    showToast('Copy failed', 'error');
-  });
+  if (!currentLogDetail) return;
+  copyText(JSON.stringify(currentLogDetail, null, 2), t('detail.copied'));
+}
+
+function copyDetailCurl(which) {
+  if (!currentLogDetail) return;
+  const text = which === 'server'
+    ? buildServerCurl(currentLogDetail)
+    : buildClientCurl(currentLogDetail);
+  if (!text) {
+    showToast(t('detail.serverCurlUnavailable'), 'error');
+    return;
+  }
+  copyText(text, t('detail.copied'));
 }
 
 function deleteModel(name, btn) {

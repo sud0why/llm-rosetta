@@ -195,6 +195,46 @@ class TestPersistenceManagerRequestLog:
         assert found["model"] == entry["model"]
         pm.close()
 
+    def test_get_log_entry_preserves_distinct_request_fields(self, tmp_path):
+        """Column order from ALTER TABLE must not shift detail fields on read."""
+        pm = PersistenceManager(str(tmp_path))
+        entry = RequestLogEntry.create(
+            model="ark-anthropic-glm-5.2",
+            source_provider="anthropic",
+            target_provider="anthropic",
+            is_stream=False,
+            status_code=200,
+            duration_ms=12.0,
+            request_path="/v1/messages",
+            request_method="POST",
+            upstream_url="https://example.com/v1/messages",
+            request_body={"model": "ark-anthropic-glm-5.2", "messages": []},
+            request_headers={
+                "content-type": "application/json",
+                "x-api-key": "sk-ant-client",
+            },
+            response_body={"model": "ark-anthropic-glm-5.2", "content": []},
+            response_headers={"content-type": "application/json; charset=utf-8"},
+            upstream_request_body={"model": "glm-5.2", "messages": []},
+            upstream_request_headers={
+                "content-type": "application/json",
+                "x-api-key": "ark-provider-key",
+            },
+            upstream_response_body={"model": "glm-5.2", "content": []},
+            upstream_response_headers={"server": "istio-envoy"},
+        ).to_dict()
+        pm.insert_log_entries([entry])
+
+        found = pm.get_log_entry(entry["id"])
+        assert found is not None
+        assert found["request_headers"]["x-api-key"] == "sk-ant-client"
+        assert found["request_body"]["model"] == "ark-anthropic-glm-5.2"
+        assert found["upstream_request_headers"]["x-api-key"] == "ark-provider-key"
+        assert found["upstream_request_body"]["model"] == "glm-5.2"
+        assert found["request_path"] == "/v1/messages"
+        assert found["upstream_url"] == "https://example.com/v1/messages"
+        pm.close()
+
     def test_get_log_entry_not_found(self, tmp_path):
         pm = PersistenceManager(str(tmp_path))
         assert pm.get_log_entry("nonexistent") is None

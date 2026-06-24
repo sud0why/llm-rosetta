@@ -397,8 +397,10 @@ async def handle_non_streaming(
     reasoning_config_override: dict[str, Any] | None = None,
     model_capabilities: list[str] | None = None,
     request_headers: dict[str, str] | None = None,
+    client_request_body: dict[str, Any] | None = None,
 ) -> Response:
     """Non-streaming proxy: convert -> forward -> convert back -> respond."""
+    client_body = client_request_body if client_request_body is not None else body
     store = metadata_store or _default_metadata_store
     source_converter = get_converter_for_provider(source_provider)
     target_converter = get_converter_for_provider(target_provider)
@@ -489,6 +491,23 @@ async def handle_non_streaming(
             upstream_resp.text,
             endpoint=str(target_provider),
         )
+        try:
+            error_body: Any = upstream_resp.json()
+        except Exception:
+            error_body = {"raw": upstream_resp.text}
+        upstream_resp_headers = (
+            dict(upstream_resp.headers) if hasattr(upstream_resp, "headers") else {}
+        )
+        _store_request_detail(
+            request_body=client_body,
+            request_headers=request_headers,
+            upstream_url=url,
+            upstream_request_headers=headers,
+            upstream_request_body=upstream_body,
+            upstream_response_body=error_body,
+            upstream_response_headers=upstream_resp_headers,
+            response_body=error_body,
+        )
         return Response(
             body=upstream_resp.content,
             status_code=upstream_resp.status_code,
@@ -515,22 +534,6 @@ async def handle_non_streaming(
     # 6b. Cache provider_metadata from tool calls for follow-up requests
     store.cache_from_response(ir_response)
 
-    # Store detailed request/response for logging
-    request_detail_var.set(
-        {
-            "request_body": body,
-            "request_headers": request_headers,
-            "upstream_request_body": upstream_body,
-            "upstream_response_body": upstream_json,
-            "upstream_request_headers": upstream_resp.headers
-            if hasattr(upstream_resp, "headers")
-            else None,
-            "upstream_response_headers": dict(upstream_resp.headers)
-            if hasattr(upstream_resp, "headers")
-            else None,
-        }
-    )
-
     # 7. IR -> Source response
     try:
         source_response = source_converter.response_to_provider(
@@ -540,6 +543,19 @@ async def handle_non_streaming(
         return error_response_for_source(
             source_provider, 500, f"Failed to convert response: {exc}"
         )
+
+    _store_request_detail(
+        request_body=client_body,
+        request_headers=request_headers,
+        upstream_url=url,
+        upstream_request_headers=headers,
+        upstream_request_body=upstream_body,
+        upstream_response_body=upstream_json,
+        upstream_response_headers=dict(upstream_resp.headers)
+        if hasattr(upstream_resp, "headers")
+        else None,
+        response_body=source_response,
+    )
 
     return JSONResponse(source_response)
 
@@ -629,6 +645,11 @@ def _update_request_detail(key: str, value: Any) -> None:
     detail = request_detail_var.get()
     if detail is not None:
         detail[key] = value
+
+
+def _store_request_detail(**fields: Any) -> None:
+    """Replace the per-request detail snapshot used by admin logging."""
+    request_detail_var.set(fields)
 
 
 async def _stream_event_generator(
@@ -739,8 +760,10 @@ async def handle_streaming(
     reasoning_config_override: dict[str, Any] | None = None,
     model_capabilities: list[str] | None = None,
     request_headers: dict[str, str] | None = None,
+    client_request_body: dict[str, Any] | None = None,
 ) -> Response | StreamingResponse:
     """Streaming proxy: convert -> forward -> stream-convert back -> SSE."""
+    client_body = client_request_body if client_request_body is not None else body
     store = metadata_store or _default_metadata_store
     source_converter = get_converter_for_provider(source_provider)
     target_converter = get_converter_for_provider(target_provider)
@@ -817,12 +840,13 @@ async def handle_streaming(
     # Store detailed request/response for logging (partial for streaming)
     request_detail_var.set(
         {
-            "request_body": body,
+            "request_body": client_body,
             "request_headers": request_headers,
             "upstream_request_body": upstream_body,
             "upstream_request_headers": headers,
-            "upstream_response_body": None,  # Will be populated during streaming
-            "upstream_response_headers": None,  # Will be populated during streaming
+            "upstream_url": url,
+            "upstream_response_body": None,
+            "upstream_response_headers": None,
         }
     )
 

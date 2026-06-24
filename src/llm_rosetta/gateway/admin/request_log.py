@@ -43,13 +43,18 @@ class RequestLogEntry:
     api_key_label: str | None = None
     target_provider_name: str | None = None
     client_ip: str | None = None
+    request_path: str | None = None
+    request_method: str | None = None
     # Detailed request/response bodies and headers (for debug view)
     request_body: dict[str, Any] | None = None
     request_headers: dict[str, str] | None = None
+    response_body: dict[str, Any] | None = None
+    response_headers: dict[str, str] | None = None
     upstream_request_body: dict[str, Any] | None = None
     upstream_response_body: dict[str, Any] | None = None
     upstream_request_headers: dict[str, str] | None = None
     upstream_response_headers: dict[str, str] | None = None
+    upstream_url: str | None = None
 
     @classmethod
     def create(
@@ -65,12 +70,17 @@ class RequestLogEntry:
         api_key_label: str | None = None,
         target_provider_name: str | None = None,
         client_ip: str | None = None,
+        request_path: str | None = None,
+        request_method: str | None = None,
         request_body: dict[str, Any] | None = None,
         request_headers: dict[str, str] | None = None,
+        response_body: dict[str, Any] | None = None,
+        response_headers: dict[str, str] | None = None,
         upstream_request_body: dict[str, Any] | None = None,
         upstream_response_body: dict[str, Any] | None = None,
         upstream_request_headers: dict[str, str] | None = None,
         upstream_response_headers: dict[str, str] | None = None,
+        upstream_url: str | None = None,
     ) -> RequestLogEntry:
         """Factory with auto-generated id and timestamp."""
         return cls(
@@ -86,12 +96,17 @@ class RequestLogEntry:
             api_key_label=api_key_label,
             target_provider_name=target_provider_name,
             client_ip=client_ip,
+            request_path=request_path,
+            request_method=request_method,
             request_body=request_body,
             request_headers=request_headers,
+            response_body=response_body,
+            response_headers=response_headers,
             upstream_request_body=upstream_request_body,
             upstream_response_body=upstream_response_body,
             upstream_request_headers=upstream_request_headers,
             upstream_response_headers=upstream_response_headers,
+            upstream_url=upstream_url,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -114,11 +129,19 @@ class RequestLogEntry:
             d["target_provider_name"] = self.target_provider_name
         if self.client_ip is not None:
             d["client_ip"] = self.client_ip
+        if self.request_path is not None:
+            d["request_path"] = self.request_path
+        if self.request_method is not None:
+            d["request_method"] = self.request_method
         # Detailed request/response (optional, only included when present)
         if self.request_body is not None:
             d["request_body"] = self.request_body
         if self.request_headers is not None:
             d["request_headers"] = self.request_headers
+        if self.response_body is not None:
+            d["response_body"] = self.response_body
+        if self.response_headers is not None:
+            d["response_headers"] = self.response_headers
         if self.upstream_request_body is not None:
             d["upstream_request_body"] = self.upstream_request_body
         if self.upstream_response_body is not None:
@@ -127,6 +150,8 @@ class RequestLogEntry:
             d["upstream_request_headers"] = self.upstream_request_headers
         if self.upstream_response_headers is not None:
             d["upstream_response_headers"] = self.upstream_response_headers
+        if self.upstream_url is not None:
+            d["upstream_url"] = self.upstream_url
         return d
 
 
@@ -153,8 +178,12 @@ def finalize_stream_request_log() -> None:
             error_detail=pending.get("error_detail"),
             api_key_label=pending.get("api_key_label"),
             client_ip=pending.get("client_ip"),
+            request_path=pending.get("request_path"),
+            request_method=pending.get("request_method"),
             request_body=detail.get("request_body") if detail else None,
             request_headers=detail.get("request_headers") if detail else None,
+            response_body=detail.get("response_body") if detail else None,
+            response_headers=detail.get("response_headers") if detail else None,
             upstream_request_body=detail.get("upstream_request_body")
             if detail
             else None,
@@ -167,6 +196,7 @@ def finalize_stream_request_log() -> None:
             upstream_response_headers=detail.get("upstream_response_headers")
             if detail
             else None,
+            upstream_url=detail.get("upstream_url") if detail else None,
         )
     )
     pending_stream_log_var.set(None)
